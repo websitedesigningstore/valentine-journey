@@ -61,6 +61,7 @@ const Dashboard: React.FC = () => {
   const [config, setConfig] = useState<ValentineConfig | null>(null);
   const [editingDay, setEditingDay] = useState<DayType | null>(null);
   const [message, setMessage] = useState('');
+  const [showGuide, setShowGuide] = useState(false);
 
   // State for Custom Share Modal
   const [shareModalData, setShareModalData] = useState<{ day: string, link: string, title: string, text: string } | null>(null);
@@ -141,13 +142,80 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 p-4 max-w-4xl mx-auto bg-gray-50/50">
-      <header className="flex justify-between items-center mb-8 pt-4">
+      <header className="flex justify-between items-center mb-6 pt-4">
         <div>
           <h1 className="text-3xl font-hand font-bold text-rose-600">Hi, {user.username} 👋</h1>
           <p className="text-sm text-gray-500">Creating magic for {user.partnerName}</p>
         </div>
-        <button onClick={() => { clearSession(); navigate('/'); }} className="text-sm border border-rose-200 px-3 py-1 rounded-full text-rose-500 hover:bg-rose-50">Logout</button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowGuide(!showGuide)} className="text-sm bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-1 rounded-full hover:bg-indigo-100 font-bold">
+            {showGuide ? 'Hide Guide 📖' : 'How to Use? 📖'}
+          </button>
+          <button onClick={() => { clearSession(); navigate('/'); }} className="text-sm border border-rose-200 px-3 py-1 rounded-full text-rose-500 hover:bg-rose-50">Logout</button>
+        </div>
       </header>
+
+      {/* HOW TO USE GUIDE */}
+      {showGuide && (
+        <div className="bg-white border border-indigo-100 rounded-2xl p-6 mb-8 shadow-sm animate-fade-in relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
+          <h2 className="text-xl font-bold text-indigo-700 mb-4 flex items-center gap-2">
+            📖 Kaise Use Karein? (Step-by-Step)
+          </h2>
+
+          <div className="space-y-6 text-sm text-gray-700">
+
+            {/* Step 1 */}
+            <div className="flex gap-3">
+              <div className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">1</div>
+              <div>
+                <strong className="block text-gray-900 mb-1">Pehle Setup & Test Karo (Abhi)</strong>
+                <p>Har din ka message 'Edit' button daba ke apne hisaab se likho. Phir 'Open' checking karo. <br />
+                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full mt-1 inline-block">Note: Abhi "Preview Mode" hai, sab timers 10 second ke hain testing ke liye.</span></p>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="flex gap-3">
+              <div className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">2</div>
+              <div>
+                <strong className="block text-gray-900 mb-1">Go Live (Jab Ready Ho)</strong>
+                <p>Jab edit karke satisfied ho jao, tab upar <strong>"Go Live Now"</strong> button dabana. <br />Isse timers actual dates (Feb 7 - Feb 14) par set ho jayenge.</p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex gap-3">
+              <div className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">3</div>
+              <div>
+                <strong className="block text-gray-900 mb-1">Kab Kya Share Karna Hai? (Schedule)</strong>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100"><span className="block text-xs font-bold text-rose-500">7 Feb</span> Rose 🌹</div>
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100"><span className="block text-xs font-bold text-rose-500">8 Feb</span> Propose 💍</div>
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100"><span className="block text-xs font-bold text-rose-500">9 Feb</span> Chocolate 🍫</div>
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100"><span className="block text-xs font-bold text-rose-500">10 Feb</span> Teddy 🧸</div>
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100"><span className="block text-xs font-bold text-rose-500">11 Feb</span> Promise 🤝</div>
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100"><span className="block text-xs font-bold text-rose-500">12 Feb</span> Hug 🤗</div>
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100"><span className="block text-xs font-bold text-rose-500">13 Feb</span> Kiss 😘</div>
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100"><span className="block text-xs font-bold text-rose-500">14 Feb</span> Valentine ❤️</div>
+                </div>
+                <p className="mt-2 text-xs italic opacity-75">Har din subah uth ke bas "Share" button dabana aur link WhatsApp pe bhejna!</p>
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="flex gap-3">
+              <div className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">4</div>
+              <div>
+                <strong className="block text-gray-900 mb-1">Replies Check Karo</strong>
+                <p>Partner jab link khol ke reply karega, wo seedha neeche <strong>"Confessions Box"</strong> me dikhega. Beech beech me aake check karte rehna! 💌</p>
+              </div>
+            </div>
+
+          </div>
+          <button onClick={() => setShowGuide(false)} className="mt-6 w-full py-2 text-indigo-500 hover:text-indigo-700 text-xs font-bold">Close Guide</button>
+        </div>
+      )}
 
       {/* Activation Status */}
       <div className={`glass-card p-6 rounded-2xl mb-10 border-l-8 shadow-sm ${config.isActive ? 'border-l-green-400 bg-white' : 'border-l-yellow-400 bg-white'}`}>
