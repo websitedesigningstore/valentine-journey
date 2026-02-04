@@ -10,8 +10,15 @@ import DayPreloader from '../../components/DayPreloader';
 import InteractiveQuiz from '../../components/InteractiveQuiz';
 
 const HUG_QUIZ = [
-  { q: "Do you like tight hugs? 🫂", options: ["Love them! ❤️", "Choking hazard! 😂"] as [string, string] },
-  { q: "Am I huggable? 🧸", options: ["Very! ☁️", "Not really... 🌵"] as [string, string] }
+  { q: "Kya tumhe tight hugs pasand hain? 🫂", options: ["Bahut jyada! ❤️", "Saans ruk jati hai! 😂"] as [string, string] },
+  { q: "Kya main huggable hu? 🧸", options: ["Bilkul! ☁️", "Sochna padega... 🌵"] as [string, string] }
+];
+
+const HUG_TYPES = [
+  { id: 'tight', label: 'Tight Hug 🫂', desc: "Jisme saans atak jaye!" },
+  { id: 'warm', label: 'Warm Hug ☀️', desc: "Sukoon wala..." },
+  { id: 'bear', label: 'Bear Hug 🐻', desc: "Haddiya todne wala!" },
+  { id: 'long', label: 'Long Hug ⏳', desc: "Bas chhodna mat..." }
 ];
 
 const HugDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
@@ -22,86 +29,62 @@ const HugDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolea
   const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.HUG, isActive));
   const [isLoading, setIsLoading] = useState(true);
 
+  /* STATE MANAGEMENT */
+  const [stage, setStage] = useState<'type_select' | 'hugging' | 'feeling' | 'quiz' | 'finale'>('type_select');
+  const [selectedHug, setSelectedHug] = useState<string | null>(null);
+
+  // Hugging Logic
   const [fill, setFill] = useState(0);
   const [isHugging, setIsHugging] = useState(false);
-  const [hugComplete, setHugComplete] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [quizLog, setQuizLog] = useState<string[]>([]);
-  const [isFinished, setIsFinished] = useState(false);
 
   // Check lock status periodically
   useEffect(() => {
-    // Initial Check
     setIsLocked(!isDayUnlocked(DayType.HUG, isActive));
     setTimeRemaining(getTimeUntilUnlock(DayType.HUG, isActive));
-
     const interval = setInterval(() => {
       const unlocked = isDayUnlocked(DayType.HUG, isActive);
       setIsLocked(!unlocked);
-      if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.HUG, isActive));
-      }
+      if (!unlocked) setTimeRemaining(getTimeUntilUnlock(DayType.HUG, isActive));
     }, 1000);
     return () => clearInterval(interval);
   }, [isActive]);
 
   // LONG PRESS LOGIC
   const startHug = () => {
-    if (hugComplete || isFinished) return;
     setIsHugging(true);
     intervalRef.current = setInterval(() => {
       setFill((prev) => {
         if (prev >= 100) {
           if (intervalRef.current) clearInterval(intervalRef.current);
-          setHugComplete(true);
+          handleHugComplete();
           return 100;
         }
-        return prev + 2; // Speed of fill
+        return prev + 3;
       });
-    }, 50);
+    }, 40);
   };
 
   const stopHug = () => {
-    if (hugComplete || isFinished) return;
     setIsHugging(false);
     if (intervalRef.current) clearInterval(intervalRef.current);
   };
 
-  const handleFinish = async (answers?: string[]) => {
-    setIsFinished(true);
-    if (userId) {
-      const finalLog = answers || quizLog;
-      const log = `Hug Day Activity Log: ${finalLog.join(', ')} | Sent a Virtual Hug! (HUG DAY COMPLETED)`;
-      await saveConfession(userId, log, DayType.HUG);
-    }
-
-    // Redirect to next day (Kiss Day)
-    setTimeout(() => {
-      const userPref = localStorage.getItem('user_mode_preference') || 'live';
-
-      const baseUrl = window.location.href.split('?')[0].split('#')[0];
-      let queryString = `?mode=${userPref}&nextDay=true`;
-
-      const params = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
-      const simDateParam = params.get('simDate');
-      if (simDateParam) {
-        queryString += `&simDate=${simDateParam}`;
-      }
-
-      window.location.href = `${baseUrl}#/v/${userId}${queryString}`;
-      window.location.reload();
-    }, 2000);
+  const handleHugComplete = () => {
+    setIsHugging(false);
+    setTimeout(() => setStage('feeling'), 500);
   };
 
-  // Mobile Touch Support
-  const handleTouchStart = (e: React.TouchEvent) => { e.preventDefault(); startHug(); };
-  const handleTouchEnd = () => stopHug();
-
-  // intervalRef cleanup is inside the component logic, but let's ensure one useEffect handles unmount
-  useEffect(() => {
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, []);
+  const handleFinish = async (answers?: string[]) => {
+    if (userId) {
+      const finalLog = answers || quizLog;
+      const log = `Hug Day Activity Log: ${finalLog.join(', ')} | Selected Hug: ${selectedHug} (HUG DAY COMPLETED)`;
+      await saveConfession(userId, log, DayType.HUG);
+    }
+    setStage('finale');
+  };
 
   // 1. Show Preloader First
   if (isLoading) {
@@ -121,67 +104,136 @@ const HugDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolea
   }
 
   return (
-    <>
-      <div className="min-h-screen flex flex-col items-center justify-start pt-10 p-6 overflow-x-hidden relative bg-pink-50/50" >
-        <h1 className="text-4xl font-hand font-bold text-pink-600 mb-2 drop-shadow-sm z-20">Hug Day 🤗</h1>
-        <p className="text-gray-600 mb-8 z-20 text-center italic">"{data.message}"</p>
+    <div className="min-h-screen flex flex-col items-center justify-start pt-10 p-6 overflow-x-hidden relative bg-pink-50">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-20">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="absolute text-5xl animate-float" style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, animationDelay: `${i}s` }}>🤗</div>
+        ))}
+      </div>
 
-        {/* INTERACTION: HUG METER */}
-        <div className="w-full max-w-xs flex flex-col items-center mb-8 relative">
-          <div className="relative w-48 h-48 flex items-center justify-center mb-4">
-            {/* Background Heart */}
-            <svg viewBox="0 0 24 24" className="w-full h-full text-gray-200 fill-current absolute">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-            </svg>
+      <h1 className="text-4xl font-hand font-bold text-pink-600 mb-2 drop-shadow-sm z-20">Hug Day 🤗</h1>
 
-            {/* Foreground Heart (Clipped by height) */}
-            <div className="absolute inset-0 flex items-end justify-center overflow-hidden" style={{ clipPath: `inset(${100 - fill}% 0 0 0)` }}>
-              <svg viewBox="0 0 24 24" className="w-48 h-48 text-pink-500 fill-current">
+      {/* STAGE 1: HUG TYPE SELECTION */}
+      {
+        stage === 'type_select' && (
+          <div className="w-full max-w-md animate-fade-in-up z-20">
+            <p className="text-gray-600 mb-8 text-center italic">"{data.message}"</p>
+            <h3 className="text-center font-bold text-pink-800 mb-6 uppercase tracking-widest">Kaisa Hug Chahiye? 👇</h3>
+
+            <div className="grid grid-cols-2 gap-4">
+              {HUG_TYPES.map((type) => (
+                <button
+                  key={type.id}
+                  onClick={() => { setSelectedHug(type.label); setStage('hugging'); }}
+                  className="glass-card p-4 rounded-xl hover:scale-105 transition-transform border border-pink-100 bg-white/60 active:bg-pink-100"
+                >
+                  <div className="text-lg font-bold text-pink-700">{type.label}</div>
+                  <div className="text-xs text-gray-500">{type.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      }
+
+      {/* STAGE 2: INTERACTIVE HUGGING */}
+      {
+        stage === 'hugging' && (
+          <div className="w-full max-w-xs flex flex-col items-center mb-8 relative animate-zoom-in z-20">
+            <h3 className="text-pink-800 font-bold mb-4">Kas ke pakad lo! 🫂</h3>
+            <div className="relative w-56 h-56 flex items-center justify-center mb-6">
+              {/* Base Heart */}
+              <svg viewBox="0 0 24 24" className="w-full h-full text-pink-100 fill-current absolute drop-shadow-sm">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
               </svg>
+              {/* Filling Heart */}
+              <div className="absolute inset-0 flex items-end justify-center overflow-hidden" style={{ clipPath: `inset(${100 - fill}% 0 0 0)` }}>
+                <svg viewBox="0 0 24 24" className="w-56 h-56 text-pink-500 fill-current">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+              </div>
+              <div className="absolute text-2xl font-bold text-white drop-shadow-lg pointer-events-none">
+                {fill}%
+              </div>
             </div>
 
-            {/* Pulse Effect when complete */}
-            {hugComplete && <div className="absolute inset-0 animate-ping rounded-full bg-pink-400 opacity-20"></div>}
-          </div>
-
-          {!hugComplete ? (
             <button
               onMouseDown={startHug}
               onMouseUp={stopHug}
               onMouseLeave={stopHug}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              className={`w-full py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-95 touch-none select-none ${isHugging ? 'bg-pink-600 scale-95' : 'bg-pink-500'} text-white`}
+              onTouchStart={(e) => { e.preventDefault(); startHug(); }}
+              onTouchEnd={stopHug}
+              className={`w-full py-4 rounded-xl font-bold shadow-xl transition-all active:scale-95 touch-none select-none ${isHugging ? 'bg-pink-600 scale-95 ring-4 ring-pink-200' : 'bg-gradient-to-r from-pink-500 to-rose-500'} text-white text-xl`}
             >
-              {isHugging ? 'Sending Warmth... 🔥' : 'Hold to Hug Me 🫂'}
+              {isHugging ? 'Sending Hug... 💖' : 'Hold to Hug me! 👆'}
             </button>
-          ) : (
-            <div className="text-center animate-bounce">
-              <p className="text-pink-600 font-bold text-xl">Hug Received! ❤️</p>
-            </div>
-          )}
-        </div>
+          </div>
+        )
+      }
 
-        {/* Q&A SECTION */}
-        {hugComplete && !isFinished && (
+      {/* STAGE 3: FEELING CHECK */}
+      {
+        stage === 'feeling' && (
+          <div className="w-full max-w-sm animate-fade-in text-center z-20">
+            <span className="text-6xl mb-4 block">😌</span>
+            <h3 className="text-2xl font-bold text-pink-800 mb-6">Kaisa laga Virtual Hug?</h3>
+            <div className="flex flex-col gap-3">
+              <button onClick={() => setStage('quiz')} className="bg-white border-2 border-pink-200 text-pink-700 py-3 rounded-xl font-bold hover:bg-pink-50">
+                Bahut Sukoon mila! 🌸
+              </button>
+              <button onClick={() => setStage('quiz')} className="bg-white border-2 border-pink-200 text-pink-700 py-3 rounded-xl font-bold hover:bg-pink-50">
+                Ek aur chahiye! 🫂
+              </button>
+            </div>
+          </div>
+        )
+      }
+
+      {/* STAGE 4: QUIZ */}
+      {
+        stage === 'quiz' && (
           <InteractiveQuiz
             questions={HUG_QUIZ}
             title="Hug Talks... 💬"
             themeColor="pink"
-            onComplete={(answers) => handleFinish(answers)}
+            onComplete={handleFinish}
           />
-        )}
+        )
+      }
 
-        {isFinished && (
-          <div className="text-center animate-pulse mt-6">
-            <span className="text-4xl">💋</span>
-            <p className="text-pink-800 font-bold mt-2">Loading Kisses...</p>
+      {/* STAGE 5: FINALE (KISS DAY WAITING) */}
+      {
+        stage === 'finale' && (
+          <div className="w-full max-w-sm animate-zoom-in mt-10 text-center mx-auto">
+            <div className="bg-white/40 backdrop-blur-lg p-8 rounded-[3rem] shadow-2xl border border-white/60 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-t from-pink-50/50 to-transparent"></div>
+
+              <span className="text-7xl block mb-4 animate-bounce-slow">🤗❤️</span>
+
+              <h2 className="text-3xl font-hand font-bold text-pink-800 mb-2 drop-shadow-sm">Thank You!</h2>
+
+              <p className="text-gray-700 mb-6 text-lg font-medium leading-relaxed">
+                "Itne pyaare hug ke liye... <br />
+                **Dil se Thank You!** ✨"
+              </p>
+
+              <div className="w-full h-px bg-pink-200/50 my-6"></div>
+
+              <h3 className="text-xl font-bold text-pink-900 mb-2">Kal ke liye... 🤫</h3>
+              <p className="text-gray-600 mb-8 text-md italic">
+                "Main kal ke liye **Bahut Excited** hu! <br />
+                Bas thoda sa intezaar... kuch bahut special aane wala hai! 🙈"
+              </p>
+
+              <div className="inline-block bg-white/60 px-6 py-2 rounded-full text-sm font-bold text-pink-800 tracking-widest uppercase border border-pink-200 shadow-sm animate-pulse">
+                SURPRISE LOADING... ⏳
+              </div>
+            </div>
           </div>
-        )}
+        )
+      }
 
-      </div>
-    </>
+    </div >
   );
 };
 

@@ -8,10 +8,10 @@ import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../ut
 import DayPreloader from '../../components/DayPreloader';
 
 const PROPOSE_QUIZ = [
-  { q: "Do you promise to stay with me forever? 🤝", options: ["I Promise! ❤️", "I'll Try! 😅"] as [string, string] },
-  { q: "Will you make my life an adventure? 🎢", options: ["Always! 🌍", "Maybe... 🏠"] as [string, string] },
-  { q: "Do you love me more than anything? 🥺", options: ["Yes, Infinite! ♾️", "Lots! 💕"] as [string, string] },
-  { q: "Are you ready for the big question? 💍", options: ["Born Ready! 😎", "Nervous... 🙈"] as [string, string] }
+  { q: "Promise karo, hamesha saath rahoge? 🤝", options: ["Ha, Hamesha! ❤️", "Puri Koshish! 😅"] as [string, string] },
+  { q: "Meri life ko adventure banaoge? 🎢", options: ["Bilkul! 🌍", "Shayad... 🏠"] as [string, string] },
+  { q: "Sabse zyada pyaar karte ho mujhse? 🥺", options: ["Had se zyada! ♾️", "Bohat sara! 💕"] as [string, string] },
+  { q: "Big Question ke liye taiyaar ho? 💍", options: ["Hamesha Ready! 😎", "Thoda Nervous... 🙈"] as [string, string] }
 ];
 
 import InteractiveQuiz from '../../components/InteractiveQuiz';
@@ -33,7 +33,7 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
   const [quizComplete, setQuizComplete] = useState(false);
   const [quizLog, setQuizLog] = useState<string[]>([]);
 
-  const fullText = data.message || "Will you be my Valentine?";
+  const fullText = data.message || "Kya tum mere Valentine banoge? 💍";
 
   // Check lock status periodically
   useEffect(() => {
@@ -123,10 +123,10 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
           <div className="animate-fade-in-up z-10 flex flex-col items-center justify-center mt-20">
             <div className="text-8xl mb-6 animate-ping">💖</div>
             <h1 className="text-5xl mb-4 animate-bounce">💍 ❤️</h1>
-            <h2 className="text-3xl font-hand text-rose-600 font-bold mb-4 drop-shadow-md">She Said YES!</h2>
+            <h2 className="text-3xl font-hand text-rose-600 font-bold mb-4 drop-shadow-md">She Said YES! 💍❤️</h2>
             <div className="glass-card p-6 rounded-xl mt-4 max-w-sm text-center">
-              <p className="text-gray-700 text-lg">"Promise to keep you happy forever!"</p>
-              <p className="text-sm text-gray-400 mt-4">(Waiting for Chocolate Day... Next Surprise Loading! 🍫)</p>
+              <p className="text-gray-700 text-lg">"Promise, tum hamesha khush rahoge!"</p>
+              <p className="text-sm text-gray-400 mt-4">(Chocolate Day ka intezaar hai... abhi aur surprises baaki hain! 🍫)</p>
             </div>
           </div>
         ) : (
@@ -141,7 +141,7 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
             {!quizComplete ? (
               <InteractiveQuiz
                 questions={PROPOSE_QUIZ}
-                title="Before I ask you..."
+                title="Poochne se pehle..."
                 themeColor="rose"
                 onComplete={handleQuizFinish}
               />

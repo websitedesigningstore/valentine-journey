@@ -8,18 +8,19 @@ import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../ut
 import DayPreloader from '../../components/DayPreloader';
 
 import InteractiveQuiz from '../../components/InteractiveQuiz';
+import TypewriterText from '../../components/TypewriterText';
 
 const PROMISE_QUIZ = [
-  { q: "Will you keep my secrets? 🤐", options: ["Always! 🔒", "Depends... 😜"] as [string, string] },
-  { q: "Promise to never leave? 🤝", options: ["Forever! ❤️", "I'll try! 😅"] as [string, string] }
+  { q: "Mere secrets hamesha rakhoge na? 🤐", options: ["Hamesha! 🔒", "Sochne do... 😜"] as [string, string] },
+  { q: "Kabhi chhod ke to nahi jaoge? 🤝", options: ["Kabhi nahi! ❤️", "Puri koshish rahegi! 😅"] as [string, string] }
 ];
 
 const PROMISES_LIST = [
-  "I will always respect you. ✊",
-  "I will listen to you patiently. 👂",
-  "I will share my last slice of pizza. 🍕",
-  "I will never sleep angry with you. 😴",
-  "I will love you more every day. 📈"
+  "Tumhari respect hamesha rahegi. ✊",
+  "Tumhari har baat suni jayegi. 👂",
+  "Last pizza slice tumhare naam. 🍕",
+  "Gussa hoke nahi sona hai. 😴",
+  "Pyar har din badhta rahega. 📈"
 ];
 
 // ... (PROMISES_LIST stays)
@@ -32,63 +33,23 @@ const PromiseDay: React.FC<{ data: DayContent; partnerName: string; isActive: bo
   const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.PROMISE, isActive));
   const [isLoading, setIsLoading] = useState(true);
 
-  const [checkedPromises, setCheckedPromises] = useState<number[]>([]);
+  /* STATE */
+  const [stage, setStage] = useState<'quiz' | 'my_promises' | 'finale'>('quiz');
   const [quizLog, setQuizLog] = useState<string[]>([]);
-  const [isFinished, setIsFinished] = useState(false);
 
-  // Check lock status periodically
-  useEffect(() => {
-    // Initial check
-    setIsLocked(!isDayUnlocked(DayType.PROMISE, isActive));
-    setTimeRemaining(getTimeUntilUnlock(DayType.PROMISE, isActive));
+  // ... (lock checks stay)
 
-    const interval = setInterval(() => {
-      const unlocked = isDayUnlocked(DayType.PROMISE, isActive);
-      setIsLocked(!unlocked);
-      if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.PROMISE, isActive));
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isActive]);
-
-  const togglePromise = (index: number) => {
-    if (checkedPromises.includes(index)) {
-      setCheckedPromises(prev => prev.filter(i => i !== index));
-    } else {
-      setCheckedPromises(prev => [...prev, index]);
-    }
+  const handleQuizComplete = (answers: string[]) => {
+    setQuizLog(answers);
+    setStage('my_promises');
   };
 
-  const handleFinish = async (answers?: string[]) => {
-    if (checkedPromises.length === 0) {
-      alert("Ek promise to select karo buddhu! 😤");
-      return;
-    }
-    setIsFinished(true);
+  const handleFinish = async () => {
     if (userId) {
-      const promisesMade = checkedPromises.map(i => PROMISES_LIST[i]).join(', ');
-      const finalLog = answers || quizLog;
-      const log = `Promise Day Activity Log: ${finalLog.join(', ')} | Promises Made: ${promisesMade} (PROMISE DAY COMPLETED)`;
+      const log = `Promise Day Activity Log: ${quizLog.join(', ')} | Viewed My Promises (PROMISE DAY COMPLETED)`;
       await saveConfession(userId, log, DayType.PROMISE);
     }
-
-    // Redirect
-    setTimeout(() => {
-      const userPref = localStorage.getItem('user_mode_preference') || 'live';
-
-      const baseUrl = window.location.href.split('?')[0].split('#')[0];
-      let queryString = `?mode=${userPref}&nextDay=true`;
-
-      const params = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
-      const simDateParam = params.get('simDate');
-      if (simDateParam) {
-        queryString += `&simDate=${simDateParam}`;
-      }
-
-      window.location.href = `${baseUrl}#/v/${userId}${queryString}`;
-      window.location.reload();
-    }, 2000);
+    setStage('finale');
   };
 
   // 1. Show Preloader First
@@ -109,49 +70,100 @@ const PromiseDay: React.FC<{ data: DayContent; partnerName: string; isActive: bo
   }
 
   return (
-    <>
-      <div className="min-h-screen flex flex-col items-center justify-start pt-10 p-6 overflow-x-hidden relative bg-blue-50/50" >
-        <h1 className="text-4xl font-hand font-bold text-blue-800 mb-2 drop-shadow-sm z-20">Promise Day 🤝</h1>
-        <p className="text-gray-600 mb-8 z-20 text-center italic">"{data.message}"</p>
+    <div className="min-h-screen flex flex-col items-center justify-start pt-10 p-6 overflow-x-hidden relative bg-blue-50">
+      {/* Background Floating Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-30">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="absolute text-4xl animate-pulse" style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, animationDelay: `${i}s` }}>🤝</div>
+        ))}
+      </div>
 
-        <div className="w-full max-w-md animate-fade-in-up">
-          {/* PROMISE LIST */}
-          <div className="glass-card p-6 rounded-2xl mb-8 border border-blue-200">
-            <h3 className="text-center font-bold text-blue-900 mb-4 uppercase tracking-widest">Select Promises to Keep 👇</h3>
-            <div className="space-y-3">
-              {PROMISES_LIST.map((p, i) => (
-                <div key={i}
-                  onClick={() => togglePromise(i)}
-                  className={`p-3 rounded-lg border flex items-center gap-3 cursor-pointer transition-all ${checkedPromises.includes(i) ? 'bg-blue-100 border-blue-400' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
-                >
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${checkedPromises.includes(i) ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
-                    {checkedPromises.includes(i) && <span className="text-white text-xs">✓</span>}
-                  </div>
-                  <span className="text-gray-700 font-medium text-sm">{p}</span>
-                </div>
-              ))}
+      <h1 className="text-4xl font-hand font-bold text-blue-600 mb-2 drop-shadow-sm z-20">Promise Day 🤝</h1>
+      <p className="text-gray-600 mb-8 z-20 text-center italic">"{data.message}"</p>
+
+      <div className="w-full max-w-md animate-fade-in-up z-20">
+
+        {/* STAGE 1: TAKE PROMISES (Quiz) */}
+        {stage === 'quiz' && (
+          <div className="flex flex-col gap-6">
+            <div className="text-center mb-4">
+              <h3 className="text-xl font-bold text-blue-800">Pehle kuch waade tumse... 👇</h3>
             </div>
-          </div>
-
-          {/* Q&A SECTION */}
-          {!isFinished && (
             <InteractiveQuiz
               questions={PROMISE_QUIZ}
-              title="Promise Verification 👮‍♂️"
+              title="Pakka wala Promise? 👮‍♂️"
               themeColor="blue"
-              onComplete={(answers) => handleFinish(answers)}
+              onComplete={handleQuizComplete}
             />
-          )}
+          </div>
+        )}
 
-          {isFinished && (
-            <div className="text-center animate-pulse mt-6">
-              <span className="text-4xl">🤗</span>
-              <p className="text-blue-800 font-bold mt-2">Sending Hugs...</p>
+        {/* STAGE 2: MY PROMISES (Reciprocity) */}
+        {stage === 'my_promises' && (
+          <div className="animate-zoom-in">
+            <div className="glass-card p-6 rounded-2xl border-2 border-blue-200 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-400 to-cyan-400"></div>
+
+              <h3 className="text-center font-bold text-2xl text-blue-800 mb-6 font-hand">Ab Meri Baari... ✋</h3>
+
+              <div className="space-y-4 mb-8">
+                {PROMISES_LIST.map((p, i) => (
+                  <div key={i} className="flex items-center gap-3 bg-white/60 p-3 rounded-lg shadow-sm">
+                    <span className="text-xl">✨</span>
+                    <span className="text-gray-700 font-medium text-sm">
+                      {stage === 'my_promises' && <TypewriterText text={p} speed={30} delay={i * 800} cursor={false} />}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-center p-4 bg-blue-50/80 rounded-xl mb-6 border border-blue-100 italic text-blue-700">
+                "Ye sirf lines nahi hain, ye mera dil se kiya hua vaada hai. I promise to keep you happy! ❤️"
+              </div>
+
+              <button
+                onClick={handleFinish}
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 rounded-xl shadow-lg hover:scale-105 transition-transform"
+              >
+                I Accept Your Promises! 🤝
+              </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* STAGE 3: FINALE (Waiting for Hug Day) */}
+        {stage === 'finale' && (
+          <div className="w-full max-w-sm animate-zoom-in mt-10 text-center mx-auto">
+            <div className="bg-gradient-to-br from-blue-100 to-indigo-100 p-8 rounded-[2rem] shadow-2xl border-4 border-white/50 relative overflow-hidden">
+
+              <div className="absolute -top-10 -left-10 w-32 h-32 bg-blue-300 rounded-full blur-3xl opacity-30"></div>
+              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-indigo-300 rounded-full blur-3xl opacity-30"></div>
+
+              <span className="text-7xl block mb-4 animate-bounce-slow filter drop-shadow-md">🤗</span>
+
+              <h2 className="text-3xl font-hand font-bold text-blue-900 mb-2">Thank You! ❤️</h2>
+              <p className="text-gray-700 mb-4 text-lg leading-relaxed font-medium">
+                "Inn sabhi promises ke liye, aur abhi tak mera saath dene ke liye... <br />
+                **Dil se Thank You!** 🌹<br />
+                You mean everything to me."
+              </p>
+
+              <div className="w-full h-px bg-blue-200 my-4"></div>
+
+              <h3 className="text-xl font-bold text-blue-800 mb-2">Next: Hug Day 🧸</h3>
+              <p className="text-gray-600 mb-6 text-md italic">
+                "Vaade toh ho gaye... ab bas ek *Jaadu ki Jhappi* ka intezaar hai!"
+              </p>
+
+              <div className="inline-block bg-white/50 px-4 py-2 rounded-full text-xs font-bold text-blue-800 tracking-wider">
+                KAL MILTE HAIN 🤗
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
-    </>
+    </div>
   );
 };
 

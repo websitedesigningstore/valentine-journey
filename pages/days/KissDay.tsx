@@ -10,8 +10,8 @@ import DayPreloader from '../../components/DayPreloader';
 import InteractiveQuiz from '../../components/InteractiveQuiz';
 
 const KISS_QUIZ = [
-  { q: "May I kiss you? 💋", options: ["Yes! 😘", "On forehead! 😇"] as [string, string] },
-  { q: "Your favorite kiss spot? 🙈", options: ["Lips! 👄", "Cheek! 😊"] as [string, string] }
+  { q: "Kya main tumhe kiss kar sakta hu? 💋", options: ["Ha, Bilkul! 😘", "Sirf Forehead pe! 😇"] as [string, string] },
+  { q: "Tumhe kaisi kiss pasand hai? 🙈", options: ["Soft & Slow 🌸", "Quick & Cute 😉"] as [string, string] }
 ];
 
 const KissDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
@@ -29,16 +29,12 @@ const KissDay: React.FC<{ data: DayContent; partnerName: string; isActive: boole
 
   // Check lock status periodically
   useEffect(() => {
-    // Initial
     setIsLocked(!isDayUnlocked(DayType.KISS, isActive));
     setTimeRemaining(getTimeUntilUnlock(DayType.KISS, isActive));
-
     const interval = setInterval(() => {
       const unlocked = isDayUnlocked(DayType.KISS, isActive);
       setIsLocked(!unlocked);
-      if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.KISS, isActive));
-      }
+      if (!unlocked) setTimeRemaining(getTimeUntilUnlock(DayType.KISS, isActive));
     }, 1000);
     return () => clearInterval(interval);
   }, [isActive]);
@@ -64,23 +60,6 @@ const KissDay: React.FC<{ data: DayContent; partnerName: string; isActive: boole
       const log = `Kiss Day Activity Log: ${finalLog.join(', ')} | Sent ${kissCount} Kisses! (KISS DAY COMPLETED)`;
       await saveConfession(userId, log, DayType.KISS);
     }
-
-    // Redirect to next day (Valentine Day)
-    setTimeout(() => {
-      const userPref = localStorage.getItem('user_mode_preference') || 'live';
-
-      const baseUrl = window.location.href.split('?')[0].split('#')[0];
-      let queryString = `?mode=${userPref}&nextDay=true`;
-
-      const params = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
-      const simDateParam = params.get('simDate');
-      if (simDateParam) {
-        queryString += `&simDate=${simDateParam}`;
-      }
-
-      window.location.href = `${baseUrl}#/v/${userId}${queryString}`;
-      window.location.reload();
-    }, 2000);
   };
 
   // 1. Show Preloader First
@@ -101,52 +80,81 @@ const KissDay: React.FC<{ data: DayContent; partnerName: string; isActive: boole
   }
 
   return (
-    <>
-      <div
-        className="min-h-screen flex flex-col items-center justify-start pt-10 p-6 overflow-hidden relative bg-red-50/50 touch-none"
-        onClick={addKiss}
-      >
-        <h1 className="text-4xl font-hand font-bold text-red-600 mb-2 drop-shadow-sm z-20 pointer-events-none select-none">Kiss Day 💋</h1>
-        <p className="text-gray-600 mb-8 z-20 text-center italic pointer-events-none select-none">"{data.message}"</p>
+    <div
+      className="min-h-screen flex flex-col items-center justify-start pt-10 p-6 overflow-hidden relative bg-red-50/50 touch-none"
+      onClick={addKiss}
+    >
+      <h1 className="text-4xl font-hand font-bold text-red-600 mb-2 drop-shadow-sm z-20 pointer-events-none select-none">Kiss Day 💋</h1>
+      <p className="text-gray-600 mb-8 z-20 text-center italic pointer-events-none select-none">"{data.message}"</p>
 
-        {/* FLOATING KISSES CONTAINER */}
-        {kisses.map(kiss => (
-          <div
-            key={kiss.id}
-            className="fixed text-4xl pointer-events-none animate-ping-slow"
-            style={{ left: kiss.x - 20, top: kiss.y - 20, opacity: 0.8 }}
-          >
-            💋
-          </div>
-        ))}
+      {/* FLOATING KISSES CONTAINER */}
+      {kisses.map(kiss => (
+        <div
+          key={kiss.id}
+          className="fixed text-4xl pointer-events-none animate-ping-slow"
+          style={{ left: kiss.x - 20, top: kiss.y - 20, opacity: 0.8 }}
+        >
+          💋
+        </div>
+      ))}
 
-        {/* MAIN INTERACTION */}
-        <div className="w-full max-w-sm flex flex-col items-center z-30" onClick={e => e.stopPropagation()}>
-          <div className="bg-white/80 backdrop-blur glass-card p-6 rounded-2xl w-full border border-red-200 text-center mb-8">
-            <div className="text-8xl mb-4 animate-bounce hover:scale-110 transition-transform cursor-pointer" onClick={(e) => addKiss(e as any)}>💋</div>
-            <p className="font-bold text-red-800">Tap anywhere to send kisses!</p>
-            <p className="text-4xl font-bold text-red-600 mt-2">{kissCount}</p>
-          </div>
+      {/* MAIN INTERACTION */}
+      <div className="w-full max-w-sm flex flex-col items-center z-30" onClick={e => e.stopPropagation()}>
 
-          {/* Q&A SECTION */}
-          {!isFinished && (
+        {!isFinished ? (
+          <>
+            <div className="bg-white/80 backdrop-blur glass-card p-6 rounded-2xl w-full border border-red-200 text-center mb-8 shadow-xl">
+              <div className="text-8xl mb-4 animate-bounce hover:scale-110 transition-transform cursor-pointer filter drop-shadow-md" onClick={(e) => addKiss(e as any)}>💋</div>
+              <p className="font-bold text-red-800 text-lg">Screen pe tap karke dher saari Kisses bhejo! 👇</p>
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <div className="bg-red-100 text-red-600 px-4 py-1 rounded-full font-bold shadow-inner">Count: {kissCount}</div>
+              </div>
+            </div>
+
             <InteractiveQuiz
               questions={KISS_QUIZ}
               title="Romantic Talks... 💬"
               themeColor="red"
               onComplete={(answers) => handleFinish(answers)}
             />
-          )}
+          </>
+        ) : (
+          /* GRAND FINALE CARD */
+          <div className="w-full animate-zoom-in mt-4 text-center">
+            <div className="bg-gradient-to-br from-red-600 to-rose-700 p-8 rounded-[2rem] shadow-2xl border-4 border-red-300/50 relative overflow-hidden text-white">
 
-          {isFinished && (
-            <div className="text-center animate-pulse mt-6">
-              <span className="text-4xl">❤️</span>
-              <p className="text-red-800 font-bold mt-2">Entering Valentine's Day...</p>
+              {/* Sparkle effects */}
+              <div className="absolute top-0 left-0 w-full h-full opacity-30">
+                <div className="absolute top-10 left-10 w-2 h-2 bg-white rounded-full animate-ping"></div>
+                <div className="absolute bottom-10 right-10 w-3 h-3 bg-white rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
+              </div>
+
+              <h2 className="text-4xl font-hand font-bold mb-4 drop-shadow-lg">Woohooo! 🎉</h2>
+              <p className="text-red-100 text-xl font-medium mb-6">
+                {kissCount > 0 ? `Tumne ${kissCount} kisses bheje! 😘` : "Kisses bhejna bhul gaye? Koi nahi! 😉"}
+              </p>
+
+              <div className="bg-white/20 backdrop-blur p-4 rounded-xl border border-white/20 mb-6">
+                <p className="text-white text-lg italic">
+                  "Ab dil tham ke baitho... Kyunki kal ka din <br />**SABSE KHAAS** hai! ❤️"
+                </p>
+              </div>
+
+              <div className="animate-bounce">
+                <span className="text-6xl filter drop-shadow-lg">🌹💍✨</span>
+              </div>
+
+              <div className="mt-8">
+                <div className="inline-block bg-white text-red-600 px-6 py-3 rounded-full font-bold tracking-widest uppercase shadow-lg transform hover:scale-105 transition-transform">
+                  THE BIG DAY IS COMING ⏳
+                </div>
+              </div>
+
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 

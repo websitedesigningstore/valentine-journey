@@ -6,3 +6,48 @@
 body {
   overscroll-behavior-y: none;
 }
+
+@layer utilities {
+  .animate-drop-in {
+    animation: dropIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  .animate-drop-in-slow {
+    animation: dropIn 5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  .animate-fade-in-slow {
+    animation: fadeIn 2s ease-in forwards;
+  }
+}
+
+@keyframes dropIn {
+  0% {
+    transform: translateY(-100vh);
+    opacity: 0;
+  }
+
+  60% {
+    transform: translateY(20px);
+    opacity: 1;
+  }
+
+  80% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

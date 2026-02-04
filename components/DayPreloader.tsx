@@ -24,8 +24,8 @@ const PRELOAD_DATA: Record<DayType, { text: string; icon: string; color: string 
         color: "bg-orange-50 text-orange-600"
     },
     [DayType.PROMISE]: {
-        text: "Ek anokha wada, jo hamesha yaad rahega... �", // A unique promise, that will always be remembered...
-        icon: "�",
+        text: "Ek anokha wada, jo hamesha yaad rahega... 🤞", // A unique promise...
+        icon: "🤝",
         color: "bg-blue-50 text-blue-600"
     },
     [DayType.HUG]: {
@@ -40,7 +40,7 @@ const PRELOAD_DATA: Record<DayType, { text: string; icon: string; color: string 
     },
     [DayType.VALENTINE]: {
         text: "Wo pal jiska intezaar tha... 😍", // The moment you were waiting for...
-        icon: "�",
+        icon: "💘",
         color: "bg-rose-100 text-rose-700"
     },
     [DayType.WAITING]: {

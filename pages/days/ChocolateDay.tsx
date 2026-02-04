@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 import LockedDayScreen from '../../components/LockedDayScreen';
-import PreviewModeBanner from '../../components/PreviewModeBanner';
 import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
-import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../utils/dateLock';
+import { isDayUnlocked, getTimeUntilUnlock } from '../../utils/dateLock';
 import DayPreloader from '../../components/DayPreloader';
 import ScratchCard from '../../components/ScratchCard';
 import InteractiveQuiz from '../../components/InteractiveQuiz';
 
 const CHOCOLATE_QUIZ = [
-  { q: "Aaj mera look sweet hai na? 🍬", options: ["Chashni se bhi zyada! 🍯", "Ha thik thak... 🙄"] as [string, string] },
-  { q: "Kya main chocolate se bhi sweet hu? 🍫", options: ["Bohat zyada! ❤️", "Bilkul barabar! 🤝"] as [string, string] },
-  { q: "Apna last piece share karoge? 🥺", options: ["Sirf tumhare saath! 🫂", "Bilkul nahi! 😈"] as [string, string] }
+  { q: "Sabse lucky insaan kaun hai? 🍀", options: ["Jo tumhe pa gaya! ❤️", "Jo chocolate khata hai... 🍫"] as [string, string] },
+  { q: "Life ki bitterness kaise khatam hui? 🍬", options: ["Tumhare aane se ✨", "Cheeni khane se... 🍚"] as [string, string] },
+  { q: "Ye chocolate kiske liye? 🥺", options: ["Sirf mere liye! 🍫", "Sabke liye..."] as [string, string] }
 ];
 
-const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
+const CHOCOLATES = [
+  { id: 'silk', name: 'Silk', emoji: '🍫', msg: "Kyunki tumhara pyaar Silk se bhi smooth hai... ❤️" },
+  { id: 'kitkat', name: 'KitKat', emoji: '🥖', msg: "Tumhare saath har pal 'crunchy' aur special hai! ✨" },
+  { id: 'ferrero', name: 'Ferrero', emoji: '🌰', msg: "Tum meri life ke 'Golden' person ho, sabse anmol! 👑" }
+];
+
+const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolean }> = ({ data, isActive }) => {
   const { userId } = useParams<{ userId: string }>();
 
   // Lock state
@@ -23,14 +29,11 @@ const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: 
   const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.CHOCOLATE, isActive));
   const [isLoading, setIsLoading] = useState(true);
 
-  const [sweetness, setSweetness] = useState(50);
-  const [unwrapState, setUnwrapState] = useState<'wrapped' | 'animating' | 'unwrapped'>('wrapped');
-  const [isRevealed, setIsRevealed] = useState(false);
+  // Flow State
+  // 'scratch' -> 'reveal_wish' -> 'chocolate_box' -> 'quiz' -> 'finale'
+  const [stage, setStage] = useState<'scratch' | 'reveal_wish' | 'chocolate_box' | 'quiz' | 'finale'>('scratch');
+  const [selectedChoco, setSelectedChoco] = useState<string | null>(null);
 
-  const [quizLog, setQuizLog] = useState<string[]>([]);
-  const [isFinished, setIsFinished] = useState(false);
-
-  // Check lock status periodically
   useEffect(() => {
     // Initial Check
     setIsLocked(!isDayUnlocked(DayType.CHOCOLATE, isActive));
@@ -39,50 +42,54 @@ const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: 
     const interval = setInterval(() => {
       const unlocked = isDayUnlocked(DayType.CHOCOLATE, isActive);
       setIsLocked(!unlocked);
-      if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.CHOCOLATE, isActive));
-      }
+      if (!unlocked) setTimeRemaining(getTimeUntilUnlock(DayType.CHOCOLATE, isActive));
     }, 1000);
     return () => clearInterval(interval);
   }, [isActive]);
 
-  const handleUnwrap = () => {
-    if (unwrapState !== 'wrapped') return;
-    setUnwrapState('animating');
-    setTimeout(() => {
-      setUnwrapState('unwrapped');
-    }, 1000);
+  const triggerConfetti = () => {
+    const duration = 3000;
+    const end = Date.now() + duration;
+
+    (function frame() {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#5D4037', '#8D6E63', '#D7CCC8', '#ef4444'] // Chocolate & Red
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#5D4037', '#8D6E63', '#D7CCC8', '#ef4444']
+      });
+
+      if (Date.now() < end) requestAnimationFrame(frame);
+    }());
   };
 
-  const handleFinish = async (answers?: string[]) => {
-    setIsFinished(true);
+  const handleReveal = () => {
+    setStage('reveal_wish');
+    triggerConfetti();
+  };
+
+  const handleChocoPick = (chocoId: string) => {
+    setSelectedChoco(chocoId);
+  };
+
+  const handleFinishQuiz = async (answers: string[]) => {
     if (userId) {
-      const finalLog = answers || quizLog;
-      const log = `Chocolate Day Activity Log: ${finalLog.join(', ')} | Sweetness: ${sweetness}% (CHOCOLATE DAY COMPLETED)`;
+      const log = `Chocolate Day: Picked ${selectedChoco} | Quiz: ${answers.join(', ')}`;
       await saveConfession(userId, log, DayType.CHOCOLATE);
     }
-
-    // Redirect to next day (Teddy Day)
-    setTimeout(() => {
-      const userPref = localStorage.getItem('user_mode_preference') || 'live';
-
-      const baseUrl = window.location.href.split('?')[0].split('#')[0];
-      let queryString = `?mode=${userPref}&nextDay=true`;
-
-      const params = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
-      const simDateParam = params.get('simDate');
-      if (simDateParam) {
-        queryString += `&simDate=${simDateParam}`;
-      }
-
-      window.location.href = `${baseUrl}#/v/${userId}${queryString}`;
-    }, 2000);
+    setStage('finale');
   };
 
   // 1. Show Preloader First
-  if (isLoading) {
-    return <DayPreloader day={DayType.CHOCOLATE} onFinish={() => setIsLoading(false)} />;
-  }
+  if (isLoading) return <DayPreloader day={DayType.CHOCOLATE} onFinish={() => setIsLoading(false)} />;
 
   // 2. Show locked screen if day is locked
   if (isLocked) {
@@ -97,76 +104,145 @@ const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: 
   }
 
   return (
-    <>
-      <div className="min-h-screen flex flex-col items-center justify-start pt-10 p-6 overflow-hidden relative bg-[#3E2723]" >
-        <h1 className="text-4xl font-hand font-bold text-amber-800 mb-6 drop-shadow-sm z-20 animate-bounce-slow">Chocolate Day 🍫</h1>
+    <div className="min-h-screen flex flex-col items-center justify-start pt-10 p-6 overflow-x-hidden relative bg-[#3E2723]">
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-900/40 via-transparent to-transparent opacity-50"></div>
 
-        <div className="relative w-full max-w-sm flex flex-col items-center">
-
-
-
-
-          <ScratchCard
-            width={320}
-            height={420}
-            image="https://www.transparenttextures.com/patterns/aluminum.png"
-            onReveal={() => {
-              setIsRevealed(true);
-              setUnwrapState('unwrapped');
+      {/* Background Floating Chocolates */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute text-2xl opacity-10 animate-pulse"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              transform: `rotate(${Math.random() * 360}deg)`
             }}
           >
-            {/* The Secret Content to Reveal */}
-            <div className="w-full h-full glass-card p-6 flex flex-col items-center justify-center bg-white/90">
-              <div className="text-7xl mb-4 drop-shadow-md">🍫</div>
-              <p className="text-xl text-gray-800 font-hand leading-relaxed text-center">"{data.message}"</p>
+            🍫
+          </div>
+        ))}
+      </div>
 
-              <div className="mt-6 w-full bg-amber-50 p-4 rounded-xl border border-amber-100">
-                <label className="block text-sm font-bold text-amber-900 mb-2 text-center">Tum kitne sweet ho? 🍬</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={sweetness}
-                  onChange={(e) => setSweetness(parseInt(e.target.value))}
-                  className="w-full h-3 bg-amber-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
-                />
-                <div className="text-center mt-2 text-xl font-bold text-amber-700 font-hand">
-                  {sweetness === 100 ? "Infinity! 🍯✨" : `${sweetness}% Sweet`}
-                </div>
-              </div>
+      {/* HEADER */}
+      <h1 className="text-4xl font-hand font-bold text-amber-50 mb-2 drop-shadow-md z-20 animate-fade-in-down">
+        Chocolate Day 🍫
+      </h1>
+
+      {/* STAGE 1: SCRATCH CARD */}
+      {stage === 'scratch' && (
+        <div className="relative w-full max-w-sm flex flex-col items-center animate-fade-in-up mt-8">
+          <ScratchCard
+            width={320}
+            height={320}
+            image="https://www.transparenttextures.com/patterns/aluminum.png"
+            onReveal={handleReveal}
+          >
+            <div className="w-full h-full glass-card p-6 flex flex-col items-center justify-center bg-white/95">
+              <span className="text-6xl animate-bounce">🎁</span>
+              <p className="font-hand font-bold text-xl text-amber-900 mt-4">Scratch Me!</p>
             </div>
           </ScratchCard>
+          <p className="text-amber-200 mt-4 animate-pulse">👆 Ander kuch meetha hai...</p>
+        </div>
+      )}
 
-          {/* Instruction Overlay (Disappears on interaction usually, but here handled by ScratchCard top layer) */}
-          {!isRevealed && (
-            <div className="absolute -bottom-10 left-0 right-0 text-center animate-bounce text-amber-800 font-bold">
-              👆 Scratch to Reveal!
+      {/* STAGE 2: REVEAL WISH */}
+      {stage === 'reveal_wish' && (
+        <div className="w-full max-w-sm animate-zoom-in text-center mt-10">
+          <div className="bg-white/95 p-8 rounded-3xl shadow-2xl border-4 border-amber-300 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 via-rose-400 to-amber-400 animate-gradient-x"></div>
+
+            <h2 className="text-3xl font-bold text-rose-600 font-hand mb-4 drop-shadow-sm">Happy Chocolate Day!</h2>
+            <div className="text-6xl mb-4 animate-bounce-slow">🍫❤️</div>
+
+            <p className="text-xl text-gray-700 font-medium leading-relaxed mb-6">
+              "Tum chocolate se bhi zyada sweet ho! Sach me! 😍"
+            </p>
+
+            <button
+              onClick={() => setStage('chocolate_box')}
+              className="w-full bg-gradient-to-r from-amber-600 to-rose-600 text-white font-bold py-3 rounded-xl shadow-lg hover:scale-105 transition-transform"
+            >
+              Ha, Pata Hai! 😎
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* STAGE 3: VIRTUAL CHOCOLATE BOX */}
+      {stage === 'chocolate_box' && (
+        <div className="w-full max-w-sm animate-slide-up mt-6">
+          <h3 className="text-2xl font-hand font-bold text-amber-100 text-center mb-6">Mere liye ek choose karo 👇</h3>
+
+          {!selectedChoco ? (
+            <div className="grid grid-cols-1 gap-4">
+              {CHOCOLATES.map(choco => (
+                <button
+                  key={choco.id}
+                  onClick={() => handleChocoPick(choco.id)}
+                  className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-amber-400/30 p-4 rounded-xl flex items-center gap-4 transition-all hover:scale-102 group"
+                >
+                  <span className="text-4xl filter drop-shadow-lg group-hover:rotate-12 transition-transform">{choco.emoji}</span>
+                  <span className="text-xl font-bold text-amber-100">{choco.name}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white/95 p-6 rounded-2xl shadow-xl text-center animate-flip-in-x">
+              <span className="text-5xl block mb-2">{CHOCOLATES.find(c => c.id === selectedChoco)?.emoji}</span>
+              <p className="text-lg font-bold text-rose-600 mb-6">
+                "{CHOCOLATES.find(c => c.id === selectedChoco)?.msg}"
+              </p>
+              <button
+                onClick={() => setStage('quiz')}
+                className="bg-rose-500 text-white px-8 py-2 rounded-full font-bold shadow-md hover:bg-rose-600 transition"
+              >
+                Thoda aur pyaar... 🍬
+              </button>
             </div>
           )}
         </div>
+      )}
 
+      {/* STAGE 4: QUIZ */}
+      {stage === 'quiz' && (
+        <div className="w-full max-w-md animate-fade-in-up mt-4">
+          <InteractiveQuiz
+            questions={CHOCOLATE_QUIZ}
+            title="Kuch Meethi Baatein... 🍬"
+            themeColor="amber"
+            onComplete={handleFinishQuiz}
+          />
+        </div>
+      )}
 
+      {/* STAGE 5: FINALE (WAITING) */}
+      {stage === 'finale' && (
+        <div className="w-full max-w-sm animate-zoom-in mt-10 text-center">
+          <div className="bg-gradient-to-br from-amber-100 to-rose-100 p-8 rounded-[2rem] shadow-2xl border-4 border-white/50 relative overflow-hidden">
 
-        {unwrapState === 'unwrapped' && !isFinished && (
-          <div className="w-full animate-fade-in-up mb-8">
-            <InteractiveQuiz
-              questions={CHOCOLATE_QUIZ}
-              title="Kuch Meethi Baatein... 🍬"
-              themeColor="amber"
-              onComplete={(answers) => handleFinish(answers)}
-            />
+            {/* Decorative Elements */}
+            <div className="absolute -top-10 -left-10 w-32 h-32 bg-rose-300 rounded-full blur-3xl opacity-30"></div>
+            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-amber-300 rounded-full blur-3xl opacity-30"></div>
+
+            <span className="text-7xl block mb-4 animate-bounce-slow filter drop-shadow-md">🧸</span>
+
+            <h2 className="text-3xl font-hand font-bold text-amber-900 mb-2">Teddy Day is Coming...</h2>
+            <p className="text-gray-700 mb-6 text-lg leading-relaxed font-medium">
+              "Kal taiyaar rehna... <br />
+              ek bade se <span className="text-rose-600 font-bold">Hug</span> aur <span className="text-amber-700 font-bold">Cute Surprise</span> ke liye! 🤗"
+            </p>
+
+            <div className="inline-block bg-white/50 px-4 py-2 rounded-full text-xs font-bold text-amber-800 tracking-wider">
+              KAL MILTE HAIN ❤️
+            </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {isFinished && (
-          <div className="text-center animate-bounce">
-            <span className="text-4xl">🧸</span>
-            <p className="text-amber-800 font-bold mt-2">Waiting for Teddy...</p>
-          </div>
-        )}
-
-      </div>
-    </>
+    </div>
   );
 };
 

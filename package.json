@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.93.3",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
     "bcryptjs": "^3.0.3",
+    "canvas-confetti": "^1.9.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router-dom": "^7.12.0"

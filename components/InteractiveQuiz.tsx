@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import TypewriterText from './TypewriterText';
 
 export interface Question {
     q: string;
@@ -50,19 +51,20 @@ const InteractiveQuiz: React.FC<InteractiveQuizProps> = ({ questions, title = "Q
             <h3 className={`text-sm font-bold ${theme.text} mb-6 uppercase tracking-wider mt-4`}>{title}</h3>
 
             <h2 className="text-2xl font-hand font-bold text-gray-800 mb-8 leading-snug min-h-[80px] flex items-center justify-center">
-                {currentQ.q}
+                <TypewriterText key={currentIndex} text={currentQ.q} speed={30} delay={200} />
             </h2>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 w-full">
                 <button
                     onClick={() => handleAnswer(options[0])}
-                    className={`flex-1 bg-gradient-to-r ${theme.btn} text-white py-4 rounded-xl font-bold text-xl shadow-lg hover:scale-105 transition-transform active:scale-95`}
+                    className={`w-full bg-gradient-to-r ${theme.btn} text-white py-4 rounded-xl font-bold text-xl shadow-lg hover:shadow-xl hover:scale-102 transition-all active:scale-95 group relative overflow-hidden`}
                 >
-                    {options[0]}
+                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                    <span className="relative z-10 flex items-center justify-center gap-2">{options[0]}</span>
                 </button>
                 <button
                     onClick={() => handleAnswer(options[1])}
-                    className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-xl font-bold text-xl shadow hover:bg-gray-200 transition-colors active:scale-95"
+                    className="w-full bg-white text-gray-600 border-2 border-gray-100 py-3 rounded-xl font-bold text-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                     {options[1]}
                 </button>
