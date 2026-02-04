@@ -1,3 +1,10 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { User, ValentineConfig, DayType, DEFAULT_CONTENT } from '../types';
+import { getUserConfig, updateUserConfig } from '../services/storage';
+import { getSessionUser, updateSessionActivity, clearSession } from '../utils/sessionManager';
+import ConfessionRenderer from '../components/ConfessionRenderer';
+
 const SHARE_MESSAGES: Record<DayType, { title: string, text: string }> = {
   [DayType.ROSE]: {
     title: "🌹 A Rose for You...",
@@ -33,6 +40,19 @@ const SHARE_MESSAGES: Record<DayType, { title: string, text: string }> = {
   },
   [DayType.WAITING]: { title: "Valentine Week", text: "Something special is coming..." },
   [DayType.FINISHED]: { title: "Valentine Week", text: "Thank you for the memories!" }
+};
+
+const DAY_ICONS: Record<DayType, string> = {
+  [DayType.ROSE]: '🌹',
+  [DayType.PROPOSE]: '💍',
+  [DayType.CHOCOLATE]: '🍫',
+  [DayType.TEDDY]: '🧸',
+  [DayType.PROMISE]: '🤝',
+  [DayType.HUG]: '🤗',
+  [DayType.KISS]: '💋',
+  [DayType.VALENTINE]: '❤️',
+  [DayType.WAITING]: '⏳',
+  [DayType.FINISHED]: '🏁'
 };
 
 const Dashboard: React.FC = () => {
