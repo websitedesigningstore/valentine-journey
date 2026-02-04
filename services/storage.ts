@@ -136,6 +136,15 @@ export const updateUserConfig = async (userId: string, day: DayType, content: an
   }
 };
 
+export const updateConfigStatus = async (userId: string, isActive: boolean): Promise<void> => {
+  const { error } = await supabase
+    .from(CONFIG_TABLE)
+    .update({ is_active: isActive })
+    .eq('user_id', userId);
+
+  if (error) console.error("Failed to update config status:", error);
+};
+
 export const saveConfession = async (userId: string, text: string, day: DayType): Promise<void> => {
   const current = await getUserConfig(userId);
   if (current) {
@@ -162,23 +171,31 @@ export const saveConfession = async (userId: string, text: string, day: DayType)
 
 export const getAllUsers = async (page = 1, limit = 20, search = '') => {
   try {
-    let query = supabase.from(USERS_TABLE).select('*', { count: 'exact' });
+    let query = supabase
+      .from(USERS_TABLE)
+      .select(`
+        *,
+        valentine_config!valentine_config_user_id_fkey (is_active)
+      `, { count: 'exact' });
+
     if (search) query = query.or(`username.ilike.%${search}%,partner_name.ilike.%${search}%`);
 
     const { data, error, count } = await query
       .order('created_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
 
-    console.log('getAllUsers - data:', data);
-    console.log('getAllUsers - count:', count);
-    console.log('getAllUsers - error:', error);
-
     if (error) {
       console.error('Supabase error:', error);
       throw new Error(error.message);
     }
 
-    return { users: data, total: count };
+    // Flatten structure for easier UI consumption
+    const enrichedUsers = data?.map((user: any) => ({
+      ...user,
+      isActive: user.valentine_config?.[0]?.is_active ?? false // Default to false (preview)
+    }));
+
+    return { users: enrichedUsers, total: count };
   } catch (err) {
     console.error('getAllUsers failed:', err);
     throw err;

@@ -75,12 +75,24 @@ const Dashboard: React.FC = () => {
     alert(`Link for ${day.toUpperCase()} copied!`);
   };
 
-  const toggleActivation = () => {
+  const toggleActivation = async () => {
     if (!user || !config) return;
     const newState = !config.isActive;
     const newConfig = { ...config, isActive: newState };
-    localStorage.setItem('val_data_' + user.id, JSON.stringify(newConfig));
+
+    // Optimistic update
     setConfig(newConfig);
+
+    // Save to DB
+    await import('../services/storage').then(m => m.updateConfigStatus(user.id, newState));
+
+    // Also set local preference to match
+    localStorage.setItem('val_data_' + user.id, JSON.stringify(newConfig));
+    if (newState) {
+      localStorage.setItem('user_mode_preference', 'live');
+    } else {
+      localStorage.setItem('user_mode_preference', 'demo');
+    }
   };
 
   if (!user || !config) return <div className="p-10 text-center text-rose-500 animate-pulse">Loading Dashboard...</div>;
@@ -105,17 +117,33 @@ const Dashboard: React.FC = () => {
       </header>
 
       {/* Activation Status */}
+      {/* Activation Status */}
       <div className={`glass-card p-6 rounded-2xl mb-10 border-l-8 shadow-sm ${config.isActive ? 'border-l-green-400 bg-white' : 'border-l-yellow-400 bg-white'}`}>
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
-            <h3 className="text-xl font-bold text-gray-800">{config.isActive ? 'Website is LIVE 🟢' : 'Preview Mode 🛠️'}</h3>
-            <p className="text-sm text-gray-500">{config.isActive ? 'Timers match real dates.' : 'Timers are short (10s) for testing.'}</p>
+            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              {config.isActive ? 'Website is LIVE 🟢' : 'Preview Mode 🛠️'}
+            </h3>
+
+            {config.isActive ? (
+              <p className="text-sm text-gray-600 mt-1 leading-relaxed max-w-lg">
+                <strong>Badhai ho! Aapki website ab LIVE hai! 🎉</strong><br />
+                Timers original dates (Feb 7 - 14) ke hisaab se locked rahenge.
+                Ab aap bina tension link apne partner ko share kar sakte hain! ❤️
+              </p>
+            ) : (
+              <p className="text-sm text-gray-600 mt-1 leading-relaxed max-w-lg">
+                <strong>Abhi Testing chal rahi hai. 🚧</strong><br />
+                Is mode me timers sirf <span className="text-red-500 font-bold">10 seconds</span> ke hain taaki aap saare days check kar sakein.
+                Partner ko link bhejne se pehle <strong>"Go Live"</strong> zaroor dabayein!
+              </p>
+            )}
           </div>
           <button
             onClick={toggleActivation}
-            className={`px-6 py-2 rounded-full font-bold shadow-md transform transition hover:scale-105 ${config.isActive ? 'bg-red-50 text-red-600' : 'bg-green-600 text-white'}`}
+            className={`px-6 py-2 rounded-full font-bold shadow-md transform transition hover:scale-105 ${config.isActive ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-600 text-white'}`}
           >
-            {config.isActive ? 'Deactivate (Test Mode)' : 'Go Live Now 🚀'}
+            {config.isActive ? 'Deactivate (Wapas Testing Pe)' : 'Go Live Now 🚀'}
           </button>
         </div>
       </div>

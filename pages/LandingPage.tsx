@@ -47,7 +47,7 @@ const LandingPage: React.FC = () => {
             💖 Valentine Journey
           </h1>
           <p className="text-gray-600 text-sm">
-            {isLogin ? 'Welcome back! Your special journey awaits...' : 'Something special is waiting for you... 💫'}
+            {isLogin ? 'Welcome back to your love story' : 'Create your unique Valentine experience'}
           </p>
         </div>
 

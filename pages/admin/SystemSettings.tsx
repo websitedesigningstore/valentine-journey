@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAdminSession, clearAdminSession } from '../../services/adminAuth';
-import { supabase } from '../../services/supabaseClient';
 import AdminSidebar from '../../components/admin/AdminSidebar';
+import { isDemoMode, setDemoMode as setDemoModeUtil, clearAdminOverride } from '../../utils/dateLock';
 
 const SystemSettings: React.FC = () => {
     const navigate = useNavigate();
     const admin = getAdminSession();
-    const [demoMode, setDemoMode] = useState(false);
+    const [adminOverride, setAdminOverride] = useState<'none' | 'demo' | 'live'>('none');
     const [maintenanceMode, setMaintenanceMode] = useState(false);
-    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (!admin) {
@@ -17,45 +16,27 @@ const SystemSettings: React.FC = () => {
             return;
         }
 
-        loadSettings();
+        // Check current admin override
+        const forcedMode = localStorage.getItem('admin_forced_mode');
+        if (forcedMode === 'demo' || forcedMode === 'live') {
+            setAdminOverride(forcedMode);
+        } else {
+            setAdminOverride('none');
+        }
     }, []);
 
-    const loadSettings = async () => {
-        try {
-            const { data } = await supabase
-                .from('system_settings')
-                .select('*')
-                .in('key', ['demo_mode', 'maintenance_mode']);
+    const handleAdminOverrideChange = (mode: 'none' | 'demo' | 'live') => {
+        setAdminOverride(mode);
 
-            data?.forEach(setting => {
-                if (setting.key === 'demo_mode') {
-                    setDemoMode(setting.value?.enabled || false);
-                } else if (setting.key === 'maintenance_mode') {
-                    setMaintenanceMode(setting.value?.enabled || false);
-                }
-            });
-        } catch (error) {
-            console.error('Error loading settings:', error);
-        }
-    };
-
-    const saveSetting = async (key: string, value: any) => {
-        setSaving(true);
-        try {
-            await supabase
-                .from('system_settings')
-                .upsert({
-                    key,
-                    value,
-                    updated_by: admin?.id,
-                    updated_at: new Date().toISOString()
-                });
-            alert('Setting saved!');
-        } catch (error) {
-            console.error('Error saving setting:', error);
-            alert('Failed to save setting');
-        } finally {
-            setSaving(false);
+        if (mode === 'none') {
+            clearAdminOverride();
+            alert('✅ Admin override cleared!\n\nUsers can now choose their own mode (demo/live) via URL parameters.');
+        } else if (mode === 'demo') {
+            setDemoModeUtil(true);
+            alert('✅ Admin override: DEMO MODE\n\nAll users will now see 10-second countdowns, regardless of their URL parameters.');
+        } else {
+            setDemoModeUtil(false);
+            alert('✅ Admin override: LIVE MODE\n\nAll users will now see real-time countdowns to actual dates, regardless of their URL parameters.');
         }
     };
 
@@ -77,48 +58,105 @@ const SystemSettings: React.FC = () => {
                 </div>
 
                 <div className="space-y-6">
-                    {/* Demo Mode */}
+                    {/* Admin Override Mode */}
                     <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-lg font-bold text-white mb-1">Demo Mode</h3>
-                                <p className="text-gray-400 text-sm">Allow all users to access all days</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
+                        <div className="mb-4">
+                            <h3 className="text-lg font-bold text-white mb-1">🎛️ Admin Mode Override</h3>
+                            <p className="text-gray-400 text-sm">Force all users to use a specific mode</p>
+                        </div>
+
+                        <div className="space-y-3">
+                            {/* No Override */}
+                            <label className="flex items-center p-4 bg-gray-900 rounded-lg border-2 border-gray-700 cursor-pointer hover:border-blue-500 transition-all">
                                 <input
-                                    type="checkbox"
-                                    checked={demoMode}
-                                    onChange={(e) => {
-                                        setDemoMode(e.target.checked);
-                                        saveSetting('demo_mode', { enabled: e.target.checked });
-                                    }}
-                                    className="sr-only peer"
-                                    disabled={saving}
+                                    type="radio"
+                                    name="admin-override"
+                                    value="none"
+                                    checked={adminOverride === 'none'}
+                                    onChange={() => handleAdminOverrideChange('none')}
+                                    className="w-4 h-4 text-blue-600"
                                 />
-                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                                <div className="ml-3">
+                                    <p className="text-white font-medium">No Override (User Choice)</p>
+                                    <p className="text-gray-400 text-sm">Users control mode via URL: <code className="text-purple-400">?mode=demo</code> or <code className="text-purple-400">?mode=live</code></p>
+                                </div>
                             </label>
+
+                            {/* Force Demo */}
+                            <label className="flex items-center p-4 bg-gray-900 rounded-lg border-2 border-gray-700 cursor-pointer hover:border-purple-500 transition-all">
+                                <input
+                                    type="radio"
+                                    name="admin-override"
+                                    value="demo"
+                                    checked={adminOverride === 'demo'}
+                                    onChange={() => handleAdminOverrideChange('demo')}
+                                    className="w-4 h-4 text-purple-600"
+                                />
+                                <div className="ml-3">
+                                    <p className="text-white font-medium">Force Demo Mode 🎮</p>
+                                    <p className="text-gray-400 text-sm">All users see 10-second countdowns (for testing)</p>
+                                </div>
+                            </label>
+
+                            {/* Force Live */}
+                            <label className="flex items-center p-4 bg-gray-900 rounded-lg border-2 border-gray-700 cursor-pointer hover:border-green-500 transition-all">
+                                <input
+                                    type="radio"
+                                    name="admin-override"
+                                    value="live"
+                                    checked={adminOverride === 'live'}
+                                    onChange={() => handleAdminOverrideChange('live')}
+                                    className="w-4 h-4 text-green-600"
+                                />
+                                <div className="ml-3">
+                                    <p className="text-white font-medium">Force Live Mode 🚀</p>
+                                    <p className="text-gray-400 text-sm">All users see real-time countdowns to actual dates</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        {/* Instructions */}
+                        <div className="mt-6 p-4 bg-blue-900/20 rounded-lg border border-blue-700">
+                            <p className="text-sm text-blue-300 mb-2"><strong>📖 How it works:</strong></p>
+                            <ul className="text-xs text-blue-200 space-y-1 list-disc list-inside">
+                                <li><strong>No Override:</strong> Users add <code>?mode=demo</code> or <code>?mode=live</code> to URL</li>
+                                <li><strong>Force Demo:</strong> Overrides all user choices → everyone sees 10s countdown</li>
+                                <li><strong>Force Live:</strong> Overrides all user choices → everyone sees real dates</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {/* User Link Examples */}
+                    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <h3 className="text-lg font-bold text-white mb-4">🔗 User Link Examples</h3>
+                        <div className="space-y-3">
+                            <div className="p-3 bg-gray-900 rounded-lg">
+                                <p className="text-gray-400 text-sm mb-1">Demo Mode Link:</p>
+                                <code className="text-purple-400 text-sm">https://yoursite.com/#/v/userId<strong>?mode=demo</strong></code>
+                            </div>
+                            <div className="p-3 bg-gray-900 rounded-lg">
+                                <p className="text-gray-400 text-sm mb-1">Live Mode Link:</p>
+                                <code className="text-green-400 text-sm">https://yoursite.com/#/v/userId<strong>?mode=live</strong></code>
+                            </div>
                         </div>
                     </div>
 
                     {/* Maintenance Mode */}
-                    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 opacity-50">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-lg font-bold text-white mb-1">Maintenance Mode</h3>
+                                <h3 className="text-lg font-bold text-white mb-1">🔧 Maintenance Mode</h3>
                                 <p className="text-gray-400 text-sm">Disable app for maintenance</p>
+                                <p className="text-red-400 text-xs mt-2">⚠️ Feature coming soon</p>
                             </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
+                            <label className="relative inline-flex items-center cursor-not-allowed">
                                 <input
                                     type="checkbox"
                                     checked={maintenanceMode}
-                                    onChange={(e) => {
-                                        setMaintenanceMode(e.target.checked);
-                                        saveSetting('maintenance_mode', { enabled: e.target.checked });
-                                    }}
+                                    disabled
                                     className="sr-only peer"
-                                    disabled={saving}
                                 />
-                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                <div className="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
                             </label>
                         </div>
                     </div>
@@ -132,9 +170,10 @@ const SystemSettings: React.FC = () => {
                                     alert('Feature disabled for safety. Implement with caution.');
                                 }
                             }}
-                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all"
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all disabled:opacity-50"
+                            disabled
                         >
-                            Clear All Data
+                            Clear All Data (Disabled)
                         </button>
                     </div>
                 </div>

@@ -12,6 +12,7 @@ interface UserData {
     is_banned: boolean;
     banned_reason?: string;
     last_active?: string;
+    isActive?: boolean;
 }
 
 const UserManagement: React.FC = () => {
@@ -166,15 +167,28 @@ const UserManagement: React.FC = () => {
                                                 {new Date(user.created_at).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-4">
-                                                {user.is_banned ? (
-                                                    <span className="px-2 py-1 text-xs font-medium bg-red-900/30 text-red-400 rounded-full">
-                                                        🚫 Banned
-                                                    </span>
-                                                ) : (
-                                                    <span className="px-2 py-1 text-xs font-medium bg-green-900/30 text-green-400 rounded-full">
-                                                        ✅ Active
-                                                    </span>
-                                                )}
+                                                <div className="flex flex-col gap-2 items-start">
+                                                    {user.is_banned ? (
+                                                        <span className="px-2 py-1 text-xs font-medium bg-red-900/30 text-red-400 rounded-full">
+                                                            🚫 Banned
+                                                        </span>
+                                                    ) : (
+                                                        <span className="px-2 py-1 text-xs font-medium bg-green-900/30 text-green-400 rounded-full">
+                                                            ✅ Active
+                                                        </span>
+                                                    )}
+
+                                                    {/* Mode Badge */}
+                                                    {user.isActive ? (
+                                                        <span className="px-2 py-1 text-xs font-bold bg-purple-900/30 text-purple-400 rounded-full border border-purple-500/30">
+                                                            🚀 Live Mode
+                                                        </span>
+                                                    ) : (
+                                                        <span className="px-2 py-1 text-xs font-bold bg-yellow-900/30 text-yellow-500 rounded-full border border-yellow-500/30">
+                                                            🛠️ Preview Mode
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex gap-2">

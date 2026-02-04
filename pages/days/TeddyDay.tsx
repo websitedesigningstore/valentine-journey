@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
-import WaitingPage from './WaitingPage';
+import LockedDayScreen from '../../components/LockedDayScreen';
+import PreviewModeBanner from '../../components/PreviewModeBanner';
+import { isDayUnlocked, getTimeUntilUnlock, isUserPreviewMode } from '../../utils/dateLock';
+import DayPreloader from '../../components/DayPreloader';
 
 import InteractiveQuiz from '../../components/InteractiveQuiz';
 
@@ -22,21 +25,29 @@ const TEDDY_OPTIONS = [
   { id: 'koala', emoji: '🐨', name: 'Koala Bear', desc: 'Clingy Lover' }
 ];
 
-const TeddyDay: React.FC<{ data: DayContent, isLocked?: boolean }> = ({ data, isLocked }) => {
+const TeddyDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, partnerName }) => {
   const { userId } = useParams<{ userId: string }>();
 
-  if (isLocked) {
-    return <WaitingPage
-      partnerName=""
-      customTitle="Teddy Day Coming Soon! 🧸"
-      customMessage="Ek soft sa dost tumhara intezaar kar raha hai... ⏳"
-    />;
-  }
+  // Lock state
+  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.TEDDY));
+  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.TEDDY));
+  const [isLoading, setIsLoading] = useState(true);
 
   const [selectedTeddy, setSelectedTeddy] = useState<string | null>(null);
-
   const [quizLog, setQuizLog] = useState<string[]>([]);
   const [isFinished, setIsFinished] = useState(false);
+
+  // Check lock status periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const unlocked = isDayUnlocked(DayType.TEDDY);
+      setIsLocked(!unlocked);
+      if (!unlocked) {
+        setTimeRemaining(getTimeUntilUnlock(DayType.TEDDY));
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleFinish = async (answers?: string[]) => {
     setIsFinished(true);
@@ -49,16 +60,13 @@ const TeddyDay: React.FC<{ data: DayContent, isLocked?: boolean }> = ({ data, is
 
     // Redirect to next day (Promise Day)
     setTimeout(() => {
-      const params = new URLSearchParams(window.location.search);
-      const isDemo = params.get('demo') === 'true';
-      let simDateParam = params.get('simDate');
-      if (!simDateParam && window.location.hash.includes('?')) {
-        const hashParams = new URLSearchParams(window.location.hash.split('?')[1]);
-        simDateParam = hashParams.get('simDate');
-      }
+      const userPref = localStorage.getItem('user_mode_preference') || 'live';
 
       const baseUrl = window.location.href.split('?')[0].split('#')[0];
-      let queryString = `?demo=${isDemo}&nextDay=true`;
+      let queryString = `?mode=${userPref}&nextDay=true`;
+
+      const params = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
+      const simDateParam = params.get('simDate');
       if (simDateParam) {
         queryString += `&simDate=${simDateParam}`;
       }
@@ -68,57 +76,76 @@ const TeddyDay: React.FC<{ data: DayContent, isLocked?: boolean }> = ({ data, is
     }, 2000);
   };
 
+  // 1. Show Preloader First
+  if (isLoading) {
+    return <DayPreloader day={DayType.TEDDY} onFinish={() => setIsLoading(false)} />;
+  }
+
+  // 2. Show locked screen if day is locked
+  if (isLocked) {
+    return (
+      <LockedDayScreen
+        day={DayType.TEDDY}
+        dayTitle="Teddy Day 🧸"
+        timeRemaining={timeRemaining}
+        onUnlock={() => setIsLocked(false)}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start pt-10 p-6 overflow-x-hidden relative bg-orange-50/50">
-      <h1 className="text-4xl font-hand font-bold text-orange-600 mb-2 drop-shadow-sm z-20">Teddy Day 🧸</h1>
-      <p className="text-gray-600 mb-8 z-20 text-center italic">"{data.message}"</p>
+    <>
+      <div className="min-h-screen flex flex-col items-center justify-start pt-10 p-6 overflow-hidden relative bg-amber-50" >
+        <h1 className="text-4xl font-hand font-bold text-orange-600 mb-2 drop-shadow-sm z-20">Teddy Day 🧸</h1>
+        <p className="text-gray-600 mb-8 z-20 text-center italic">"{data.message}"</p>
 
-      {/* STEP 1: SELECT A TEDDY */}
-      {!selectedTeddy ? (
-        <div className="w-full max-w-md animate-fade-in-up">
-          <h3 className="text-center font-bold text-orange-800 mb-6 uppercase tracking-widest">Choose a Teddy for yourself! 👇</h3>
-          <div className="grid grid-cols-2 gap-4">
-            {TEDDY_OPTIONS.map((teddy) => (
-              <button
-                key={teddy.id}
-                onClick={() => setSelectedTeddy(teddy.id)}
-                className="glass-card p-4 rounded-xl flex flex-col items-center justify-center hover:scale-105 transition-transform border border-orange-100 hover:bg-orange-100"
-              >
-                <span className="text-6xl mb-2">{teddy.emoji}</span>
-                <span className="font-bold text-gray-800">{teddy.name}</span>
-                <span className="text-xs text-gray-500">{teddy.desc}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : (
-        /* STEP 2: Q&A Interaction */
-        <div className="w-full max-w-md animate-fade-in flex flex-col items-center">
-
-          <div className="text-center mb-8 animate-bounce">
-            <span className="text-8xl">{TEDDY_OPTIONS.find(t => t.id === selectedTeddy)?.emoji}</span>
-            <p className="mt-4 font-bold text-orange-700">You chose {TEDDY_OPTIONS.find(t => t.id === selectedTeddy)?.name}!</p>
-          </div>
-
-          {!isFinished && (
-            <InteractiveQuiz
-              questions={TEDDY_QUIZ}
-              title="Cuteness Test... 🧸"
-              themeColor="orange"
-              onComplete={(answers) => handleFinish(answers)}
-            />
-          )}
-
-          {isFinished && (
-            <div className="text-center animate-pulse mt-8">
-              <span className="text-4xl">🤝</span>
-              <p className="text-orange-800 font-bold mt-2">Redirecting to Promises...</p>
+        {/* STEP 1: SELECT A TEDDY */}
+        {!selectedTeddy ? (
+          <div className="w-full max-w-md animate-fade-in-up">
+            <h3 className="text-center font-bold text-orange-800 mb-6 uppercase tracking-widest">Choose a Teddy for yourself! 👇</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {TEDDY_OPTIONS.map((teddy) => (
+                <button
+                  key={teddy.id}
+                  onClick={() => setSelectedTeddy(teddy.id)}
+                  className="glass-card p-4 rounded-xl flex flex-col items-center justify-center hover:scale-105 transition-transform border border-orange-100 hover:bg-orange-100"
+                >
+                  <span className="text-6xl mb-2">{teddy.emoji}</span>
+                  <span className="font-bold text-gray-800">{teddy.name}</span>
+                  <span className="text-xs text-gray-500">{teddy.desc}</span>
+                </button>
+              ))}
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        ) : (
+          /* STEP 2: Q&A Interaction */
+          <div className="w-full max-w-md animate-fade-in flex flex-col items-center">
 
-    </div>
+            <div className="text-center mb-8 animate-bounce">
+              <span className="text-8xl">{TEDDY_OPTIONS.find(t => t.id === selectedTeddy)?.emoji}</span>
+              <p className="mt-4 font-bold text-orange-700">You chose {TEDDY_OPTIONS.find(t => t.id === selectedTeddy)?.name}!</p>
+            </div>
+
+            {!isFinished && (
+              <InteractiveQuiz
+                questions={TEDDY_QUIZ}
+                title="Cuteness Test... 🧸"
+                themeColor="orange"
+                onComplete={(answers) => handleFinish(answers)}
+              />
+            )}
+
+            {isFinished && (
+              <div className="text-center animate-pulse mt-8">
+                <span className="text-4xl">🤝</span>
+                <p className="text-orange-800 font-bold mt-2">Redirecting to Promises...</p>
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
+    </>
   );
 };
 
