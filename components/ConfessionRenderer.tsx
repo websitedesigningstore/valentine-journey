@@ -252,24 +252,44 @@ const ConfessionRenderer: React.FC<ConfessionRendererProps> = ({ day, text }) =>
         );
     }
 
-    // 7. KISS DAY
-    if (day === DayType.KISS) {
-        const hasLog = text.includes("Activity Log");
-        const countMatch = text.match(/Sent (\d+) Kisses!/);
-        const count = countMatch ? countMatch[1] : "Lots of";
+    // 8. VALENTINE DAY
+    if (day === DayType.VALENTINE) {
+        const hasLog = text.includes("Valentine Day Activity Log");
+
+        // Parsing logic for "Valentine Day Activity Log: Q1..., Q2... | Final Decision: ... (Type)"
+        let logPart = "";
+        let finalPart = "";
+        let decisionType = "";
+
+        if (text.includes("| Final Decision:")) {
+            const parts = text.split("| Final Decision:");
+            logPart = parts[0].replace("Valentine Day Activity Log: ", "").trim();
+            finalPart = parts[1].trim();
+
+            // Extract decision type from parenthesis at the end
+            const typeMatch = finalPart.match(/\(([^)]+)\)$/);
+            if (typeMatch) {
+                decisionType = typeMatch[1];
+                finalPart = finalPart.replace(`(${decisionType})`, "").trim();
+            }
+        } else {
+            // Fallback if format doesn't match
+            logPart = text.replace("Valentine Day Activity Log: ", "");
+        }
 
         return (
             <div className="space-y-4">
-                {hasLog && (
-                    <div className="space-y-2 text-sm bg-red-50/50 p-3 rounded-xl border border-red-100">
-                        <div className="font-bold text-red-600 border-b border-red-100 pb-1 mb-2">💋 Kiss Day Q&A</div>
-                        {text.split("|")[0].replace("Kiss Day Activity Log: ", "").split(", ").map((logItem, i) => {
+                {/* 1. QUIZ LOGS */}
+                {hasLog && logPart && (
+                    <div className="space-y-2 text-sm bg-rose-50/50 p-3 rounded-xl border border-rose-100">
+                        <div className="font-bold text-rose-600 border-b border-rose-100 pb-1 mb-2">❤️ Valentine Q&A</div>
+                        {logPart.split(", ").map((logItem, i) => {
                             if (logItem.includes("Q")) {
                                 const parts = logItem.split(":");
                                 return (
-                                    <div key={i} className="flex items-center gap-2 bg-white p-2 rounded-lg border border-red-100 shadow-sm">
-                                        <span className="font-bold text-red-700 bg-red-100 px-2 rounded-md text-xs py-0.5">{parts[0].trim()}</span>
-                                        <span className="text-gray-800">{parts.slice(1).join(":").trim()}</span>
+                                    <div key={i} className="flex flex-col gap-1 bg-white p-2 rounded-lg border border-rose-100 shadow-sm">
+                                        <span className="font-bold text-rose-700 bg-rose-100 px-2 rounded-md text-xs py-0.5 w-fit">{parts[0].trim()}</span>
+                                        <span className="text-gray-800 text-xs">{parts.slice(1).join(":").trim()}</span>
                                     </div>
                                 )
                             }
@@ -278,14 +298,40 @@ const ConfessionRenderer: React.FC<ConfessionRendererProps> = ({ day, text }) =>
                     </div>
                 )}
 
-                <div className="bg-red-50 p-4 rounded-xl border border-red-200 text-center relative overflow-hidden">
-                    <div className="absolute -right-4 -top-4 text-8xl opacity-10 rotate-12">💋</div>
-                    <h3 className="font-bold text-red-800 text-2xl mb-1">{count}</h3>
-                    <p className="text-gray-600 text-sm uppercase tracking-widest font-bold">Kisses Sent</p>
-                    <div className="flex justify-center gap-1 mt-2 text-xl">
-                        <span>😘</span><span>💋</span><span>😽</span>
+                {/* 2. FINAL DECISION CARD */}
+                {finalPart && (
+                    <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-1 rounded-2xl shadow-lg">
+                        <div className="bg-white rounded-xl p-4 relative overflow-hidden">
+                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Final Decision</h3>
+
+                            <p className="text-lg font-hand font-bold text-rose-600 mb-3 leading-relaxed">
+                                "{finalPart}"
+                            </p>
+
+                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-2xl animate-pulse">💍</span>
+                                    <span className="text-xs font-bold text-gray-600">Proposal Accepted</span>
+                                </div>
+                                {decisionType && (
+                                    <span className={`text-xs px-2 py-1 rounded-full border font-bold ${decisionType.includes("Hard to Get")
+                                        ? "bg-purple-50 text-purple-600 border-purple-200"
+                                        : "bg-green-50 text-green-600 border-green-200"
+                                        }`}>
+                                        {decisionType}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                </div>
+                )}
+
+                {/* Fallback if just a simple message */}
+                {!hasLog && !finalPart && (
+                    <p className="text-gray-800 font-hand text-lg leading-relaxed border-l-4 border-rose-300 pl-4 italic">
+                        "{text}"
+                    </p>
+                )}
             </div>
         );
     }

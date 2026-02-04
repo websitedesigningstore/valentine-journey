@@ -174,6 +174,23 @@ export const saveConfession = async (userId: string, text: string, day: DayType,
   }
 };
 
+export const deleteUserConfession = async (userId: string, confessionId: string): Promise<void> => {
+  const current = await getUserConfig(userId);
+  if (current) {
+    const updatedConfessions = current.confessions.filter(c => c.id !== confessionId);
+
+    const { error } = await supabase
+      .from(CONFIG_TABLE)
+      .update({ confessions: updatedConfessions })
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error("Failed to delete confession:", error);
+      throw error;
+    }
+  }
+};
+
 // ============================================
 // ADMIN FUNCTIONS
 // ============================================

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, ValentineConfig, DayType, DEFAULT_CONTENT } from '../types';
-import { getUserConfig, updateUserConfig } from '../services/storage';
+import { getUserConfig, updateUserConfig, deleteUserConfession } from '../services/storage';
 import { getSessionUser, updateSessionActivity, clearSession } from '../utils/sessionManager';
 import ConfessionRenderer from '../components/ConfessionRenderer';
 
@@ -107,6 +107,20 @@ const Dashboard: React.FC = () => {
     setConfig(updated);
     setEditingDay(null);
     alert('Message saved! ❤️');
+  };
+
+  const handleDeleteConfession = async (confessionId: string) => {
+    if (!user || !config || !window.confirm('Are you sure you want to delete this confession?')) return;
+
+    try {
+      await deleteUserConfession(user.id, confessionId);
+
+      // Update local state
+      const updatedConfessions = config.confessions.filter(c => c.id !== confessionId);
+      setConfig({ ...config, confessions: updatedConfessions });
+    } catch (err) {
+      alert('Failed to delete confession.');
+    }
   };
 
   const toggleActivation = async () => {
@@ -379,7 +393,16 @@ const Dashboard: React.FC = () => {
                           <ConfessionRenderer day={c.day} text={c.text} />
                           <div className="mt-3 flex justify-between items-center border-t border-gray-50 pt-2">
                             <span className="text-[10px] text-gray-400">{new Date(c.date).toLocaleString()}</span>
-                            <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-full">{day}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-full">{day}</span>
+                              <button
+                                onClick={() => handleDeleteConfession(c.id)}
+                                className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                title="Delete Confession"
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
