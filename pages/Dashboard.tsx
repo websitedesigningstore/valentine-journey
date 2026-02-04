@@ -142,16 +142,16 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 p-4 max-w-4xl mx-auto bg-gray-50/50">
-      <header className="flex justify-between items-center mb-6 pt-4">
-        <div>
+      <header className="flex flex-col md:flex-row justify-between items-center mb-6 pt-4 gap-4">
+        <div className="text-center md:text-left">
           <h1 className="text-3xl font-hand font-bold text-rose-600">Hi, {user.username} 👋</h1>
           <p className="text-sm text-gray-500">Creating magic for {user.partnerName}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setShowGuide(!showGuide)} className="text-sm bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-1 rounded-full hover:bg-indigo-100 font-bold">
+          <button onClick={() => setShowGuide(!showGuide)} className="text-sm bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-1 rounded-full hover:bg-indigo-100 font-bold whitespace-nowrap">
             {showGuide ? 'Hide Guide 📖' : 'How to Use? 📖'}
           </button>
-          <button onClick={() => { clearSession(); navigate('/'); }} className="text-sm border border-rose-200 px-3 py-1 rounded-full text-rose-500 hover:bg-rose-50">Logout</button>
+          <button onClick={() => { clearSession(); navigate('/'); }} className="text-sm border border-rose-200 px-3 py-1 rounded-full text-rose-500 hover:bg-rose-50 whitespace-nowrap">Logout</button>
         </div>
       </header>
 
