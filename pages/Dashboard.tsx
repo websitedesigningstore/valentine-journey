@@ -141,10 +141,10 @@ const Dashboard: React.FC = () => {
   }, {} as Record<string, typeof config.confessions>);
 
   return (
-    <div className="min-h-screen pb-20 p-4 max-w-4xl mx-auto bg-gray-50/50">
+    <div className="min-h-screen pb-20 p-4 max-w-4xl mx-auto bg-gray-50/50 overflow-x-hidden">
       <header className="flex flex-col md:flex-row justify-between items-center mb-6 pt-4 gap-4">
         <div className="text-center md:text-left">
-          <h1 className="text-3xl font-hand font-bold text-rose-600">Hi, {user.username} 👋</h1>
+          <h1 className="text-2xl md:text-3xl font-hand font-bold text-rose-600">Hi, {user.username} 👋</h1>
           <p className="text-sm text-gray-500">Creating magic for {user.partnerName}</p>
         </div>
         <div className="flex gap-2">
@@ -157,7 +157,7 @@ const Dashboard: React.FC = () => {
 
       {/* HOW TO USE GUIDE */}
       {showGuide && (
-        <div className="bg-white border border-indigo-100 rounded-2xl p-6 mb-8 shadow-sm animate-fade-in relative overflow-hidden">
+        <div className="bg-white border border-indigo-100 rounded-2xl p-4 md:p-6 mb-8 shadow-sm animate-fade-in relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
           <h2 className="text-xl font-bold text-indigo-700 mb-4 flex items-center gap-2">
             📖 Kaise Use Karein? (Step-by-Step)
@@ -259,7 +259,7 @@ const Dashboard: React.FC = () => {
 
           <div className="space-y-4">
             {daysList.map(day => (
-              <div key={day} className="bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col gap-4 hover:shadow-md transition-shadow">
+              <div key={day} className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col gap-4 hover:shadow-md transition-shadow">
                 {/* Icon & Details */}
                 <div className="flex items-center gap-3 w-full">
                   <span className="text-3xl bg-rose-50 p-2 rounded-lg shrink-0">{DAY_ICONS[day]}</span>
@@ -272,14 +272,14 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Actions Footer */}
-                <div className="grid grid-cols-3 gap-2 w-full pt-3 border-t border-rose-50">
+                <div className="grid grid-cols-3 gap-1 md:gap-2 w-full pt-3 border-t border-rose-50">
                   <button
                     onClick={() => {
                       if (!user) return;
                       const link = `${window.location.origin}/#/v/${user.id}?day=${day}`;
                       window.open(link, '_blank');
                     }}
-                    className="flex text-blue-600 px-2 py-2 rounded-lg hover:bg-blue-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-blue-100"
+                    className="flex text-blue-600 px-1.5 md:px-2 py-2 rounded-lg hover:bg-blue-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-blue-100"
                     title="Open in New Tab"
                   >
                     Open ↗️
@@ -310,7 +310,7 @@ const Dashboard: React.FC = () => {
                       // Fallback to Manual Modal (for HTTP/PC compatibility)
                       setShareModalData({ day, link: shareLink, title: content.title, text: content.text });
                     }}
-                    className="flex text-indigo-600 px-2 py-2 rounded-lg hover:bg-indigo-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-indigo-100"
+                    className="flex text-indigo-600 px-1.5 md:px-2 py-2 rounded-lg hover:bg-indigo-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-indigo-100"
                     title="Share Link"
                   >
                     Share 📤
@@ -318,7 +318,7 @@ const Dashboard: React.FC = () => {
 
                   <button
                     onClick={() => startEditing(day)}
-                    className="flex text-rose-600 px-2 py-2 rounded-lg hover:bg-rose-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-rose-100"
+                    className="flex text-rose-600 px-1.5 md:px-2 py-2 rounded-lg hover:bg-rose-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-rose-100"
                   >
                     ✏️ Edit
                   </button>
