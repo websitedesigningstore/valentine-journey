@@ -145,28 +145,18 @@ export const updateConfigStatus = async (userId: string, isActive: boolean): Pro
   if (error) console.error("Failed to update config status:", error);
 };
 
-export const saveConfession = async (userId: string, text: string, day: DayType, sessionId?: string): Promise<void> => {
+export const saveConfession = async (userId: string, text: string, day: DayType, customId?: string): Promise<void> => {
   const current = await getUserConfig(userId);
   if (current) {
-    // Logic:
-    // 1. If we have a sessionId, we replace any existing confession with that SAME sessionId.
-    // 2. If we DON'T have a sessionId (legacy), we fall back to replacing by DAY (old behavior to be safe).
-    // 3. This allows multiple logs for the same day (different sessions) but keeps a single log per session.
+    // Generate ID: Use provided customId (for session persistence) or generate new one
+    const confessionId = customId || Date.now().toString();
 
-    let otherConfessions = current.confessions;
-
-    if (sessionId) {
-      // Remove any entry with the matching session ID
-      otherConfessions = current.confessions.filter(c => c.sessionId !== sessionId);
-    } else {
-      // Fallback: Remove entry for the same day if no session tracking
-      otherConfessions = current.confessions.filter(c => c.day !== day);
-    }
+    // Remove existing entry with the same ID to prevent duplicates (Update Logic)
+    const otherConfessions = current.confessions.filter(c => c.id !== confessionId);
 
     // Create new confession entry
     const confession: Confession = {
-      id: Date.now().toString(),
-      sessionId,
+      id: confessionId,
       date: new Date().toISOString(),
       text,
       day

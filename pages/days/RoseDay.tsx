@@ -19,8 +19,8 @@ const QUIZ_QUESTIONS = [
 
 const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, partnerName }) => {
   const { userId } = useParams<{ userId: string }>();
-  // Session ID for this specific visit/refresh
-  const sessionId = React.useRef(Date.now().toString());
+  // Unique Log ID for this specific session (persists until refresh)
+  const logId = React.useRef(Date.now().toString());
 
   // Lock state
   const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.ROSE));
@@ -72,7 +72,7 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
     if (userId) {
       const updatedLog = [...clickLog, `${action} (${new Date().toLocaleTimeString()})`];
       const interactionSummary = `🌹 Rose Day Activity Log:\n------------------\n${updatedLog.join('\n')}`;
-      await saveConfession(userId, interactionSummary, DayType.ROSE);
+      await saveConfession(userId, interactionSummary, DayType.ROSE, logId.current);
     }
   };
 
@@ -87,7 +87,7 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
       // Note: noCount might be stale in this strict context, so we trust the rendered text or just log the attempt
       const updatedLog = [...clickLog, `${action} (${new Date().toLocaleTimeString()})`];
       const interactionSummary = `🌹 Rose Day Activity Log:\n------------------\n${updatedLog.join('\n')}`;
-      await saveConfession(userId, interactionSummary, DayType.ROSE);
+      await saveConfession(userId, interactionSummary, DayType.ROSE, logId.current);
     }
   };
 
@@ -99,7 +99,7 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
     if (userId) {
       const updatedLog = [...clickLog, `${action} (${new Date().toLocaleTimeString()})`];
       const interactionSummary = `🌹 Rose Day Activity Log:\n------------------\n${updatedLog.join('\n')}`;
-      await saveConfession(userId, interactionSummary, DayType.ROSE);
+      await saveConfession(userId, interactionSummary, DayType.ROSE, logId.current);
     }
 
     setTimeout(() => setStage('quiz'), 2500);
@@ -113,7 +113,7 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
     if (userId) {
       const updatedLog = [...clickLog, `${action} (${new Date().toLocaleTimeString()})`];
       const interactionSummary = `🌹 Rose Day Activity Log:\n------------------\n${updatedLog.join('\n')}`;
-      await saveConfession(userId, interactionSummary, DayType.ROSE);
+      await saveConfession(userId, interactionSummary, DayType.ROSE, logId.current);
     }
 
     if (currentQIndex < QUIZ_QUESTIONS.length - 1) {
@@ -151,7 +151,7 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
     if (userId) {
       // Use newlines for better readability in admin panel
       const interactionSummary = `🌹 Rose Day Activity Log:\n------------------\n${clickLog.join('\n')}`;
-      await saveConfession(userId, interactionSummary, DayType.ROSE, sessionId.current);
+      await saveConfession(userId, interactionSummary, DayType.ROSE, logId.current);
     }
   };
 
@@ -164,7 +164,7 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
       // Create updated log manually since state update might lag slightly for this immediate save
       const updatedLog = [...clickLog, `${action} (${new Date().toLocaleTimeString()})`];
       const interactionSummary = `🌹 Rose Day Final Promise Made!\n------------------\n${updatedLog.join('\n')}`;
-      await saveConfession(userId, interactionSummary, DayType.ROSE, sessionId.current);
+      await saveConfession(userId, interactionSummary, DayType.ROSE, logId.current);
     }
   };
 
