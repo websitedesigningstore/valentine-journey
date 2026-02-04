@@ -7,36 +7,36 @@ import ConfessionRenderer from '../components/ConfessionRenderer';
 
 const SHARE_MESSAGES: Record<DayType, { title: string, text: string }> = {
   [DayType.ROSE]: {
-    title: "🌹 A Rose for You...",
-    text: "Ek surprise rose bhej raha hu... Sirf tumhare liye! 🌹 Isse dekhna zaroor. ❤️"
+    title: "🌹 Rose Day Surprise",
+    text: "Tumhari muskurahat ke liye ek chhota sa surprise… 🌹\nSirf tumhare naam ka ❤️\nPlease open karna 🥺✨"
   },
   [DayType.PROPOSE]: {
-    title: "💍 Ek Baat Kehni Thi...",
-    text: "Dil ki baat zubaan pe aayi hai... Will you be mine forever? 🥺 Open this."
+    title: "💍 Propose Day",
+    text: "Aaj dil ki baat kehni hai… 🥺❤️\nWill you be mine forever?\nIsse open karo… sirf tumhare liye hai 💍✨"
   },
   [DayType.CHOCOLATE]: {
-    title: "🍫 Kuch Meetha Ho Jaye?",
-    text: "Life is sweeter with you... maine tumhare liye kuch bheja hai! 🍫 Check karlo."
+    title: "🍫 Chocolate Day",
+    text: "Agar main chocolate hota,\nto tumhari favourite hoti 😌🍫\nEk sweet surprise tumhare liye… ❤️"
   },
   [DayType.TEDDY]: {
-    title: "🧸 A Cute Surprise!",
-    text: "Ye Teddy tumse kuch kehna chahta hai... sunogi nahi? 🧸 Sending a bear hug!"
+    title: "🧸 Teddy Day",
+    text: "Jab tum paas nahi hoti,\nto ek teddy saath hota 🧸🥺\nAaj ka surprise tumhare liye… ❤️✨"
   },
   [DayType.PROMISE]: {
-    title: "🤝 Ek Vaada...",
-    text: "Aaj tumse ek promise karna hai... Jo kabhi nahi tutega. 🤞 Read my promise."
+    title: "🤝 Promise Day",
+    text: "Aaj koi gift nahi…\nBas ek wada ❤️\nHamesha tumhare saath rehne ka �✨\nIsse open karo…"
   },
   [DayType.HUG]: {
-    title: "🤗 Need a Hug?",
-    text: "Bahut mann kar raha hai tumhe gale lagane ka... 🤗 Sending a magic hug!"
+    title: "🤗 Hug Day",
+    text: "Agar yeh message hug hota,\nto abhi tumhare paas hota 🤗❤️\nEk warm surprise tumhare liye… ✨"
   },
   [DayType.KISS]: {
-    title: "💋 A Secret Gift...",
-    text: "Ek surprise kiss bheja hai... sirf tumhare liye! 😘 Catch it now."
+    title: "� Kiss Day",
+    text: "Aaj lafzon ki zarurat nahi… 😘❤️\nBas ek ehsaas 🥺\nIsse open karo…"
   },
   [DayType.VALENTINE]: {
-    title: "❤️ My Forever Valentine",
-    text: "Sab kuch keh diya aaj... bas tumhara haan chahiye. 🌹 Will you be my Valentine?"
+    title: "❤️ Happy Valentine's Day",
+    text: "Rose, promise, hug… sab ho gaya ❤️\nPar ek baat reh gayi 🥺\nTum meri Valentine banogi? 💖✨\nIsse open karo… sirf tumhare liye 🌹"
   },
   [DayType.WAITING]: { title: "Valentine Week", text: "Something special is coming..." },
   [DayType.FINISHED]: { title: "Valentine Week", text: "Thank you for the memories!" }

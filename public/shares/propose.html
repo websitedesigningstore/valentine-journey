@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>💍 Propose Day</title>
+    <meta property="og:title" content="💍 Propose Day" />
+    <meta property="og:description"
+        content="Aaj dil ki baat kehni hai… 🥺❤️ Will you be mine forever? Isse open karo… sirf tumhare liye hai 💍✨" />
+    <meta property="og:image" content="https://media.giphy.com/media/26BRv0ThflsHCqDrG/giphy.gif" />
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const uid = params.get('uid');
+        if (uid) window.location.href = '/#/v/' + uid + '?day=propose';
+        else window.location.href = '/';
+    </script>
+</head>
+
+<body></body>
+
+</html>

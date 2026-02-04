@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🍫 Chocolate Day</title>
+    <meta property="og:title" content="🍫 Chocolate Day" />
+    <meta property="og:description"
+        content="Agar main chocolate hota, to tumhari favourite hoti 😌🍫 Ek sweet surprise tumhare liye… ❤️" />
+    <meta property="og:image" content="https://media.giphy.com/media/l2Jm1w9pS33I0r9CM/giphy.gif" />
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const uid = params.get('uid');
+        if (uid) window.location.href = '/#/v/' + uid + '?day=chocolate';
+        else window.location.href = '/';
+    </script>
+</head>
+
+<body></body>
+
+</html>

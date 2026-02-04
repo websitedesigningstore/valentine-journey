@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🧸 Teddy Day</title>
+    <meta property="og:title" content="🧸 Teddy Day" />
+    <meta property="og:description"
+        content="Jab tum paas nahi hoti, to ek teddy saath hota 🧸🥺 Aaj ka surprise tumhare liye… ❤️✨" />
+    <meta property="og:image" content="https://media.giphy.com/media/3o7TKrEzvJbsQN9Lwb/giphy.gif" />
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const uid = params.get('uid');
+        if (uid) window.location.href = '/#/v/' + uid + '?day=teddy';
+        else window.location.href = '/';
+    </script>
+</head>
+
+<body></body>
+
+</html>
