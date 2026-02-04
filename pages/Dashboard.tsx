@@ -25,6 +25,9 @@ const Dashboard: React.FC = () => {
   const [editingDay, setEditingDay] = useState<DayType | null>(null);
   const [message, setMessage] = useState('');
 
+  // State for Custom Share Modal
+  const [shareModalData, setShareModalData] = useState<{ day: string, link: string } | null>(null);
+
   useEffect(() => {
     // Check session validity
     const u = getSessionUser();
@@ -66,13 +69,6 @@ const Dashboard: React.FC = () => {
     setConfig(updated);
     setEditingDay(null);
     alert('Message saved! ❤️');
-  };
-
-  const copyDayLink = (day: DayType) => {
-    if (!user) return;
-    const link = `${window.location.origin}/#/v/${user.id}?day=${day}`;
-    navigator.clipboard.writeText(link);
-    alert(`Link for ${day.toUpperCase()} copied!`);
   };
 
   const toggleActivation = async () => {
@@ -117,7 +113,6 @@ const Dashboard: React.FC = () => {
       </header>
 
       {/* Activation Status */}
-      {/* Activation Status */}
       <div className={`glass-card p-6 rounded-2xl mb-10 border-l-8 shadow-sm ${config.isActive ? 'border-l-green-400 bg-white' : 'border-l-yellow-400 bg-white'}`}>
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
@@ -159,28 +154,69 @@ const Dashboard: React.FC = () => {
 
           <div className="space-y-4">
             {daysList.map(day => (
-              <div key={day} className="bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex items-center justify-between hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl bg-rose-50 p-2 rounded-lg">{DAY_ICONS[day]}</span>
-                  <div>
-                    <h4 className="font-bold text-gray-800 capitalize">{day} Day</h4>
-                    <p className="text-xs text-gray-400">
-                      {config.days[day]?.message?.substring(0, 20)}...
+              <div key={day} className="bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:shadow-md transition-shadow">
+                {/* Icon & Details */}
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <span className="text-3xl bg-rose-50 p-2 rounded-lg shrink-0">{DAY_ICONS[day]}</span>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-gray-800 capitalize text-lg leading-tight">{day} Day</h4>
+                    <p className="text-xs text-gray-500 truncate max-w-[220px] sm:max-w-[180px]">
+                      {config.days[day]?.message?.substring(0, 30)}...
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => copyDayLink(day)}
-                    className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full hover:bg-gray-200 font-medium flex items-center justify-center gap-1"
-                  >
-                    🔗 Link
-                  </button>
+
+                {/* Actions */}
+                <div className="flex flex-col gap-2 w-full sm:w-auto min-w-[150px]">
+                  {/* Row for Open & Share */}
+                  <div className="flex gap-2 w-full">
+                    <button
+                      onClick={() => {
+                        if (!user) return;
+                        const link = `${window.location.origin}/#/v/${user.id}?day=${day}`;
+                        window.open(link, '_blank');
+                      }}
+                      className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-100 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 border border-blue-100"
+                      title="Open in New Tab"
+                    >
+                      Open ↗️
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!user) return;
+                        const link = `${window.location.origin}/#/v/${user.id}?day=${day}`;
+                        const shareData = {
+                          title: `Happy ${day} Day!`,
+                          text: `Mere liye kuch khaas hai tumhare paas... Dekho na? 🥺❤️\n\n${link}`,
+                          url: link
+                        };
+
+                        // Try Native Share First
+                        if (navigator.share) {
+                          try {
+                            await navigator.share(shareData);
+                            return; // Success, exit
+                          } catch (err) {
+                            console.log('Share closed/failed, showing fallback', err);
+                          }
+                        }
+
+                        // Fallback to Manual Modal (for HTTP/PC compatibility)
+                        setShareModalData({ day, link });
+                      }}
+                      className="flex-1 bg-indigo-50 text-indigo-600 px-3 py-2 rounded-lg hover:bg-indigo-100 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 border border-indigo-100"
+                      title="Share Link"
+                    >
+                      Share 📤
+                    </button>
+                  </div>
+
+                  {/* Edit Button */}
                   <button
                     onClick={() => startEditing(day)}
-                    className="text-xs bg-rose-100 text-rose-600 px-3 py-1.5 rounded-full hover:bg-rose-200 font-medium"
+                    className="w-full bg-rose-50 text-rose-600 px-3 py-2 rounded-lg hover:bg-rose-100 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 border border-rose-100"
                   >
-                    ✏️ Edit
+                    ✏️ Edit Message
                   </button>
                 </div>
               </div>
@@ -191,7 +227,7 @@ const Dashboard: React.FC = () => {
         {/* RIGHT COLUMN: CONFESSIONS & EDITING */}
         <div className="space-y-8">
 
-          {/* EDITING PANEL (Sticky if possible, or just placed here) */}
+          {/* EDITING PANEL */}
           {editingDay && (
             <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-rose-200 animate-slide-up sticky top-4 z-20">
               <div className="flex justify-between items-center mb-4">
@@ -250,8 +286,104 @@ const Dashboard: React.FC = () => {
             )}
           </div>
         </div>
-
       </div>
+
+      {/* CUSTOM SHARE MODAL (Fallback for PC/HTTP) */}
+      {shareModalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative animate-zoom-in">
+            <button
+              onClick={() => setShareModalData(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
+            >
+              ✕
+            </button>
+
+            <div className="text-center mb-6">
+              <span className="text-4xl mb-2 block">{DAY_ICONS[shareModalData.day as DayType]}</span>
+              <h3 className="text-xl font-bold text-gray-800">Share {shareModalData.day} Link</h3>
+
+              {/* HTTPS Explainer for User Peace of Mind */}
+              <div className="bg-yellow-50 text-yellow-700 text-[10px] p-2 rounded-lg mt-2 mx-auto leading-tight border border-yellow-100">
+                ⚠️ Native Share (Insta/Messenger) is disabled by browsers on local WiFi.
+                <br /><strong>It will work automatically on your Live Website! 🚀</strong>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {/* WhatsApp */}
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`Mere liye kuch khaas hai tumhare paas... Dekho na? 🥺❤️\n\n${shareModalData.link}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white py-3 rounded-xl font-bold hover:bg-[#20bd5a] transition-colors shadow-sm"
+                onClick={() => setShareModalData(null)}
+              >
+                <span>💬</span> WhatsApp
+              </a>
+
+              {/* Facebook */}
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareModalData.link)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 w-full bg-[#1877F2] text-white py-3 rounded-xl font-bold hover:bg-[#166fe5] transition-colors shadow-sm"
+                onClick={() => setShareModalData(null)}
+              >
+                <span>f</span> Facebook
+              </a>
+
+              {/* Telegram */}
+              <a
+                href={`https://t.me/share/url?url=${encodeURIComponent(shareModalData.link)}&text=${encodeURIComponent("Mere liye kuch khaas hai tumhare paas... Dekho na? 🥺❤️")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 w-full bg-[#0088cc] text-white py-3 rounded-xl font-bold hover:bg-[#0077b5] transition-colors shadow-sm"
+                onClick={() => setShareModalData(null)}
+              >
+                <span>✈️</span> Telegram
+              </a>
+
+              {/* Copy Link Section */}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs text-gray-500 mb-2 font-bold uppercase text-center">Copy for Instagram / Messenger / Twitter</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={shareModalData.link}
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-rose-200"
+                    onClick={(e) => e.currentTarget.select()}
+                  />
+                  <button
+                    onClick={() => {
+                      try {
+                        const input = document.querySelector('input[readonly]') as HTMLInputElement;
+                        if (input) input.select();
+
+                        // Try modern API
+                        if (navigator.clipboard) {
+                          navigator.clipboard.writeText(shareModalData.link)
+                            .then(() => alert("Link Copied! Paste it anywhere. ✨"))
+                            .catch(() => { document.execCommand('copy'); alert("Copied!"); });
+                        } else {
+                          document.execCommand('copy');
+                          alert("Copied!");
+                        }
+                      } catch (e) {
+                        prompt("Manually copy this link:", shareModalData.link);
+                      }
+                    }}
+                    className="bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-900 shadow-sm"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
