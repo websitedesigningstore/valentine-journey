@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // Using a royalty-free romantic loop placeholder
-const MUSIC_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+const MUSIC_URL = "https://backend.lovedecorgift.shop/wp-content/uploads/2026/02/sigmamusicart-emotional-piano-music-256262.mp3";
 
 const MusicPlayer: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -11,6 +11,7 @@ const MusicPlayer: React.FC = () => {
   useEffect(() => {
     const startAudio = () => {
       if (!hasInteracted && audioRef.current) {
+        audioRef.current.volume = 0.02; // Lower volume to 2%
         audioRef.current.play().then(() => {
           setIsPlaying(true);
           setHasInteracted(true);

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DayType } from '../types';
+import TypewriterText from './TypewriterText';
 
 const PRELOAD_DATA: Record<DayType, { text: string; icon: string; color: string }> = {
     [DayType.ROSE]: {
@@ -98,8 +99,8 @@ const DayPreloader: React.FC<DayPreloaderProps> = ({ day, onFinish }) => {
             <div className="text-8xl animate-bounce mb-6 filter drop-shadow-md">
                 {config.icon}
             </div>
-            <p className="text-xl md:text-2xl font-hand font-bold text-center px-6 animate-pulse leading-relaxed">
-                "{config.text}"
+            <p className="text-xl md:text-2xl font-hand font-bold text-center px-6 leading-relaxed flex items-center justify-center min-h-[3rem]">
+                "<TypewriterText text={config.text} speed={75} />"
             </p>
 
             {/* Loading Dots */}

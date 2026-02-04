@@ -8,26 +8,41 @@ interface ConfessionRendererProps {
 
 const ConfessionRenderer: React.FC<ConfessionRendererProps> = ({ day, text }) => {
     // 1. ROSE DAY
-    if (day === DayType.ROSE && text.includes("Rose Day Completed!")) {
+    if (day === DayType.ROSE && (text.includes("Rose Day Activity Log") || text.includes("Rose Day Final Promise Made"))) {
+        // Clean up headers to isolate the list, handling both old and new formats
+        let cleanText = text
+            .replace("Rose Day Completed! Log: ", "")
+            .replace("Rose Day Activity Log:\n------------------\n", "")
+            .replace("Rose Day Final Promise Made!\n------------------\n", "")
+            .replace("Rose Day Final Promise Made! Log: ", "");
+
+        // Split by newline if present, otherwise fallback to comma (for old logs)
+        const separator = cleanText.includes('\n') ? '\n' : ', ';
+        const logItems = cleanText.split(separator).filter(item => item.trim() !== "");
+
         return (
             <div className="space-y-2 text-sm border-l-4 border-rose-300 pl-4 bg-rose-50/50 p-3 rounded-r-lg">
                 <div className="font-bold text-rose-600 border-b border-rose-100 pb-1 mb-2 flex items-center gap-2">
                     <span>🌹</span> Rose Day Activity Log
                 </div>
-                {text.replace("Rose Day Completed! Log: ", "").split(", ").map((logItem, i) => {
-                    if (logItem.includes("Q")) {
-                        const parts = logItem.split(":");
+                {logItems.map((logItem, i) => {
+                    const cleanItem = logItem.trim();
+                    if (cleanItem.includes("Quiz Question") || cleanItem.includes("Q")) {
+                        const parts = cleanItem.split(":");
                         return (
                             <div key={i} className="flex items-center gap-2 bg-white p-2 rounded-lg border border-rose-100 shadow-sm">
-                                <span className="font-bold text-rose-700 bg-rose-100 px-2 rounded-md text-xs py-0.5">{parts[0]}</span>
-                                <span className="text-gray-800">{parts.slice(1).join(":")}</span>
+                                <span className="font-bold text-rose-700 bg-rose-100 px-2 rounded-md text-xs py-0.5">{parts[0].trim()}</span>
+                                <span className="text-gray-800">{parts.slice(1).join(":").trim()}</span>
                             </div>
                         )
                     }
-                    if (logItem.includes("NO")) {
-                        return <div key={i} className="text-red-500 text-xs pl-2 font-medium">• {logItem}</div>
+                    if (cleanItem.includes("Rejected") || cleanItem.includes("NO")) {
+                        return <div key={i} className="text-red-500 text-xs pl-2 font-medium">• {cleanItem}</div>
                     }
-                    return <div key={i} className="text-gray-600 pl-2 text-xs">• {logItem}</div>
+                    if (cleanItem.includes("Promise Stage")) {
+                        return <div key={i} className="text-emerald-600 pl-2 text-xs font-bold">✨ {cleanItem}</div>
+                    }
+                    return <div key={i} className="text-gray-600 pl-2 text-xs">• {cleanItem}</div>
                 })}
             </div>
         );

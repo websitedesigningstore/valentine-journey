@@ -6,8 +6,9 @@ import LockedDayScreen from '../../components/LockedDayScreen';
 import PreviewModeBanner from '../../components/PreviewModeBanner';
 import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
-import { isDayUnlocked, getTimeUntilUnlock, isUserPreviewMode } from '../../utils/dateLock';
+import { isDayUnlocked, getTimeUntilUnlock, isUserPreviewMode, formatTimeRemaining } from '../../utils/dateLock';
 import DayPreloader from '../../components/DayPreloader';
+import TypewriterText from '../../components/TypewriterText';
 
 const QUIZ_QUESTIONS = [
   "Kya tumhe roses pasand hain? 🌹",
@@ -30,6 +31,7 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
 
   // Quiz State
   const [currentQIndex, setCurrentQIndex] = useState(0);
+  const [showQuizOptions, setShowQuizOptions] = useState(false);
 
   // Check lock status periodically
   useEffect(() => {
@@ -60,7 +62,7 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
   };
 
   const handlePermissionGranted = () => {
-    logClick("Permission Granted");
+    logClick("Permission Stage: Granted");
     setNoCount(0); // Reset for next stage
     setStage('offering');
   };
@@ -69,17 +71,18 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
     e.preventDefault();
     e.stopPropagation(); // Stop bubbling
     setNoCount(prev => prev + 1);
-    logClick(`Tried to say NO to Rose (Attempt ${noCount + 1})`);
+    logClick(`Rose Offering Stage: Rejected (Attempt ${noCount + 1})`);
   };
 
   const handleAcceptRose = () => {
-    logClick("Accepted Rose");
+    logClick("Rose Offering Stage: Accepted");
     setStage('accepted');
     setTimeout(() => setStage('quiz'), 2500);
   };
 
   const handleQuizAnswer = (answer: string) => {
-    logClick(`Q${currentQIndex + 1}: ${answer}`);
+    logClick(`Quiz Question ${currentQIndex + 1}: ${answer}`);
+    setShowQuizOptions(false); // Reset for next question
     if (currentQIndex < QUIZ_QUESTIONS.length - 1) {
       setCurrentQIndex(prev => prev + 1);
     } else {
@@ -87,29 +90,49 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
     }
   };
 
+  // New state for the final promise flow
+  const [showNextDayTimer, setShowNextDayTimer] = useState(false);
+  const PROPOSE_DAY_DATE = new Date(2026, 1, 8, 0, 0, 0); // Feb 8, 2026
+
+  const calculateTimeLeft = () => {
+    const now = new Date();
+    const diff = PROPOSE_DAY_DATE.getTime() - now.getTime();
+    return Math.max(0, diff);
+  };
+
+  const [nextDayTime, setNextDayTime] = useState(calculateTimeLeft());
+
+  // Timer for next day countdown
+  useEffect(() => {
+    if (showNextDayTimer) {
+      const interval = setInterval(() => {
+        setNextDayTime(calculateTimeLeft());
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [showNextDayTimer]);
+
   const handleQuizFinish = async () => {
     setStage('finished');
+    setNoCount(0); // Reset for promise interaction
     if (userId) {
-      const interactionSummary = `Rose Day Completed! Log: ${clickLog.join(', ')}`;
+      // Use newlines for better readability in admin panel
+      const interactionSummary = `🌹 Rose Day Activity Log:\n------------------\n${clickLog.join('\n')}`;
       await saveConfession(userId, interactionSummary, DayType.ROSE);
     }
+  };
 
-    // Redirect logic
-    setTimeout(() => {
-      const userPref = localStorage.getItem('user_mode_preference') || 'live';
+  const handlePromiseToMeet = async () => {
+    const action = "Final Promise Stage: Agreed";
+    logClick(action);
+    setShowNextDayTimer(true);
 
-      const baseUrl = window.location.href.split('?')[0].split('#')[0];
-      let queryString = `?mode=${userPref}&nextDay=true`;
-
-      const params = new URLSearchParams(window.location.hash.split('?')[1] || window.location.search);
-      const simDateParam = params.get('simDate');
-      if (simDateParam) {
-        queryString += `&simDate=${simDateParam}`;
-      }
-
-      window.location.href = `${baseUrl}#/v/${userId}${queryString}`;
-      window.location.reload();
-    }, 4000);
+    if (userId) {
+      // Create updated log manually since state update might lag slightly for this immediate save
+      const updatedLog = [...clickLog, `${action} (${new Date().toLocaleTimeString()})`];
+      const interactionSummary = `🌹 Rose Day Final Promise Made!\n------------------\n${updatedLog.join('\n')}`;
+      await saveConfession(userId, interactionSummary, DayType.ROSE);
+    }
   };
 
   // 1. Show Preloader First
@@ -129,11 +152,11 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
     );
   }
 
-
+  const { days, hours, minutes, seconds } = formatTimeRemaining(nextDayTime);
 
   return (
     <>
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-rose-50">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-rose-50 to-pink-100">
         <FloatingHearts />
 
         {/* HEADER RESTORED */}
@@ -180,12 +203,12 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
         {/* STAGE 2: ASK PERMISSION */}
         {stage === 'ask_permission' && (
           <div className="flex flex-col items-center animate-zoom-in max-w-sm w-full z-20 mt-10">
-            <p className="mb-8 text-2xl text-rose-600 font-bold font-hand animate-pulse drop-shadow-sm">
-              ✨ Permission Required! ✨
+            <p className="mb-8 text-2xl text-rose-600 font-bold font-hand animate-pulse drop-shadow-sm min-h-[2.5rem]">
+              <TypewriterText text="✨ Permission Required! ✨" speed={75} />
             </p>
             <div className="glass-card p-8 rounded-2xl shadow-xl border border-rose-200 text-center relative">
-              <p className="text-2xl font-hand font-bold text-gray-800 mb-8 leading-relaxed">
-                "Kya main tumhe ek pyara sa Rose de sakta hu? 🥺"
+              <p className="text-2xl font-hand font-bold text-gray-800 mb-8 leading-relaxed min-h-[4rem]">
+                "<TypewriterText text="Kya main tumhe ek pyara sa Rose de sakta hu? 🥺" speed={75} delay={1000} />"
               </p>
 
               <div className="flex flex-col gap-3">
@@ -224,8 +247,8 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
         {stage === 'offering' && (
           <div className="flex flex-col items-center animate-zoom-in max-w-sm w-full relative z-20">
             <div className="text-9xl mb-8 animate-float drop-shadow-2xl filter brightness-110">🌹</div>
-            <p className="text-xl font-hand text-gray-700 mb-8 text-center italic">
-              "Sirf tumhare liye... Kyunki tum is rose se bhi zyada beautiful ho."
+            <p className="text-xl font-hand text-gray-700 mb-8 text-center italic min-h-[3.5rem]">
+              "<TypewriterText text="Sirf tumhare liye... Kyunki tum is rose se bhi zyada beautiful ho." speed={75} />"
             </p>
 
             <div className="flex flex-col gap-4 w-full relative h-40 items-center">
@@ -281,45 +304,132 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
               <h3 className="text-sm font-bold text-rose-800 mb-6 uppercase tracking-wider mt-4">Thodi si baatein... 💬</h3>
 
               <h2 className="text-2xl font-hand font-bold text-gray-800 mb-8 leading-snug min-h-[80px] flex items-center justify-center">
-                {QUIZ_QUESTIONS[currentQIndex]}
+                <TypewriterText
+                  key={currentQIndex} // Key forces re-mount and re-type on question change
+                  text={QUIZ_QUESTIONS[currentQIndex]}
+                  speed={75}
+                  onComplete={() => setShowQuizOptions(true)}
+                />
               </h2>
 
-              <div className="flex gap-4">
-                <button
-                  onClick={() => handleQuizAnswer("YES")}
-                  className="flex-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white py-4 rounded-xl font-bold text-xl shadow-lg hover:scale-105 transition-transform active:scale-95"
-                >
-                  YES ❤️
-                </button>
-                <button
-                  onClick={() => handleQuizAnswer("NO")}
-                  className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-xl font-bold text-xl shadow hover:bg-gray-200 transition-colors active:scale-95"
-                >
-                  NO 💔
-                </button>
-              </div>
+              {showQuizOptions && (
+                <div className="flex gap-4 animate-fade-in-up">
+                  <button
+                    onClick={() => handleQuizAnswer("YES")}
+                    className="flex-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white py-4 rounded-xl font-bold text-xl shadow-lg hover:scale-105 transition-transform active:scale-95"
+                  >
+                    YES ❤️
+                  </button>
+                  <button
+                    onClick={() => handleQuizAnswer("NO")}
+                    className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-xl font-bold text-xl shadow hover:bg-gray-200 transition-colors active:scale-95"
+                  >
+                    NO 💔
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* STAGE 6: FINISHED */}
         {stage === 'finished' && (
-          <div className="animate-zoom-in z-20 flex flex-col items-center justify-center mt-20 text-center px-6">
-            <div className="text-7xl mb-6 animate-pulse">👩‍❤️‍👨</div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Thank you! ❤️</h1>
-            <p className="text-xl text-rose-600 font-hand font-bold mb-6">
-              "Tumne mera Rose accept kiya, mera din ban gaya!"
+          <div className="animate-zoom-in z-20 flex flex-col items-center justify-center mt-6 md:mt-10 text-center px-4 md:px-6 transition-all duration-500 w-full max-w-lg">
+            <div className="text-6xl md:text-7xl mb-4 md:mb-6 animate-pulse">👩‍❤️‍👨</div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Thank you! ❤️</h1>
+            <p className="text-lg md:text-xl text-rose-600 font-hand font-bold mb-6 min-h-[3rem]">
+              "<TypewriterText text="Tumne mera Rose accept kiya, mera din ban gaya!" speed={75} />"
             </p>
 
-            <div className="flex gap-4 justify-center mt-4">
-              <span className="text-4xl animate-bounce delay-100">🌹</span>
-              <span className="text-4xl animate-bounce delay-200">✨</span>
-              <span className="text-4xl animate-bounce delay-300">💍</span>
+            <div className="flex gap-4 justify-center mt-2 mb-6 md:mb-8">
+              <span className="text-3xl md:text-4xl animate-bounce delay-100">🌹</span>
+              <span className="text-3xl md:text-4xl animate-bounce delay-200">✨</span>
+              <span className="text-3xl md:text-4xl animate-bounce delay-300">💍</span>
             </div>
 
-            <p className="text-sm text-gray-400 mt-8 animate-pulse">
-              Redirecting to Propose Day...
-            </p>
+            {!showNextDayTimer ? (
+              <div className="animate-fade-in-up mt-2 md:mt-4 p-5 md:p-6 glass-card rounded-xl border border-rose-200 shadow-lg w-full">
+                <p className="text-base md:text-lg text-gray-700 font-bold mb-4 md:mb-6 leading-relaxed min-h-[4rem]">
+                  "<TypewriterText text="Kal phir se milogi na? Ek naya surprise wait kar raha hai! 🥺" speed={75} delay={1500} />"
+                </p>
+                <div className="flex flex-col gap-3 relative min-h-[140px] w-full">
+                  <button
+                    onClick={handlePromiseToMeet}
+                    className="w-full bg-rose-500 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-rose-600 hover:scale-105 transition-all active:scale-95 z-20"
+                  >
+                    Haan, Pakka Milungi! 🤞❤️
+                  </button>
+
+                  <button
+                    onMouseEnter={handleNoRose} // Reuse existing runaway logic
+                    onClick={handleNoRose}
+                    style={noCount > 0 ? {
+                      position: 'absolute',
+                      top: `${Math.random() * 100}px`,
+                      left: `${Math.random() * 100 - 50}px`,
+                      transition: 'all 0.3s ease-out'
+                    } : {}}
+                    className="w-full bg-white border-2 border-rose-200 text-rose-400 py-2 rounded-full font-bold text-lg hover:bg-rose-50 transition-all z-10"
+                  >
+                    {noCount === 0 ? "Nahi milungi 😒" :
+                      noCount === 1 ? "Soch lo? 🥺" :
+                        noCount === 2 ? "Aisa mat karo 💔" :
+                          noCount === 3 ? "Please? 😭" : "Maan jao na! 🌹"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="animate-zoom-in mt-2 w-full">
+                <p className="text-lg md:text-xl text-emerald-600 font-hand font-bold mb-4 md:mb-6 animate-bounce min-h-[2rem]">
+                  "<TypewriterText text="Yay! Intezaar rahega... 🌹" speed={75} />"
+                </p>
+                <div className="glass-card p-4 md:p-6 rounded-2xl bg-white/60 border border-white/50 shadow-xl backdrop-blur-md">
+                  <h3 className="text-rose-800 font-bold uppercase tracking-[0.2em] mb-4 md:mb-6 text-xs md:text-sm">
+                    Propose Day Starts In
+                  </h3>
+
+                  <div className="flex justify-center items-center gap-2 md:gap-4">
+                    {/* Days */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-14 h-14 md:w-20 md:h-20 bg-white rounded-xl md:rounded-2xl shadow-md md:shadow-lg flex items-center justify-center border border-rose-100">
+                        <span className="text-xl md:text-3xl font-bold text-rose-600">{days < 10 ? `0${days}` : days}</span>
+                      </div>
+                      <span className="text-[10px] md:text-xs font-bold text-rose-400 mt-1 md:mt-2 uppercase tracking-wide">Days</span>
+                    </div>
+
+                    <div className="text-rose-300 text-lg md:text-2xl font-bold self-start mt-3 md:mt-4">:</div>
+
+                    {/* Hours */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-14 h-14 md:w-20 md:h-20 bg-white rounded-xl md:rounded-2xl shadow-md md:shadow-lg flex items-center justify-center border border-rose-100">
+                        <span className="text-xl md:text-3xl font-bold text-rose-600">{hours < 10 ? `0${hours}` : hours}</span>
+                      </div>
+                      <span className="text-[10px] md:text-xs font-bold text-rose-400 mt-1 md:mt-2 uppercase tracking-wide">Hours</span>
+                    </div>
+
+                    <div className="text-rose-300 text-lg md:text-2xl font-bold self-start mt-3 md:mt-4">:</div>
+
+                    {/* Minutes */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-14 h-14 md:w-20 md:h-20 bg-white rounded-xl md:rounded-2xl shadow-md md:shadow-lg flex items-center justify-center border border-rose-100">
+                        <span className="text-xl md:text-3xl font-bold text-rose-600">{minutes < 10 ? `0${minutes}` : minutes}</span>
+                      </div>
+                      <span className="text-[10px] md:text-xs font-bold text-rose-400 mt-1 md:mt-2 uppercase tracking-wide">Mins</span>
+                    </div>
+
+                    <div className="text-rose-300 text-lg md:text-2xl font-bold self-start mt-3 md:mt-4">:</div>
+
+                    {/* Seconds */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-14 h-14 md:w-20 md:h-20 bg-white rounded-xl md:rounded-2xl shadow-md md:shadow-lg flex items-center justify-center border border-rose-100">
+                        <span className="text-xl md:text-3xl font-bold text-rose-500 animate-pulse">{seconds < 10 ? `0${seconds}` : seconds}</span>
+                      </div>
+                      <span className="text-[10px] md:text-xs font-bold text-rose-400 mt-1 md:mt-2 uppercase tracking-wide">Secs</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
