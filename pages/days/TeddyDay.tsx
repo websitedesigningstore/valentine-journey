@@ -4,7 +4,7 @@ import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
 import LockedDayScreen from '../../components/LockedDayScreen';
 import PreviewModeBanner from '../../components/PreviewModeBanner';
-import { isDayUnlocked, getTimeUntilUnlock, isUserPreviewMode } from '../../utils/dateLock';
+import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../utils/dateLock';
 import DayPreloader from '../../components/DayPreloader';
 
 import InteractiveQuiz from '../../components/InteractiveQuiz';
@@ -25,12 +25,12 @@ const TEDDY_OPTIONS = [
   { id: 'koala', emoji: '🐨', name: 'Koala Bear', desc: 'Clingy Lover' }
 ];
 
-const TeddyDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, partnerName }) => {
+const TeddyDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
   const { userId } = useParams<{ userId: string }>();
 
   // Lock state
-  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.TEDDY));
-  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.TEDDY));
+  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.TEDDY, isActive));
+  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.TEDDY, isActive));
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedTeddy, setSelectedTeddy] = useState<string | null>(null);
@@ -39,15 +39,19 @@ const TeddyDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, p
 
   // Check lock status periodically
   useEffect(() => {
+    // Initial Check
+    setIsLocked(!isDayUnlocked(DayType.TEDDY, isActive));
+    setTimeRemaining(getTimeUntilUnlock(DayType.TEDDY, isActive));
+
     const interval = setInterval(() => {
-      const unlocked = isDayUnlocked(DayType.TEDDY);
+      const unlocked = isDayUnlocked(DayType.TEDDY, isActive);
       setIsLocked(!unlocked);
       if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.TEDDY));
+        setTimeRemaining(getTimeUntilUnlock(DayType.TEDDY, isActive));
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive]);
 
   const handleFinish = async (answers?: string[]) => {
     setIsFinished(true);

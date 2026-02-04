@@ -4,7 +4,7 @@ import LockedDayScreen from '../../components/LockedDayScreen';
 import PreviewModeBanner from '../../components/PreviewModeBanner';
 import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
-import { isDayUnlocked, getTimeUntilUnlock, isUserPreviewMode } from '../../utils/dateLock';
+import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../utils/dateLock';
 import DayPreloader from '../../components/DayPreloader';
 import ScratchCard from '../../components/ScratchCard';
 import InteractiveQuiz from '../../components/InteractiveQuiz';
@@ -15,12 +15,12 @@ const CHOCOLATE_QUIZ = [
   { q: "Will you share your last piece? 🥺", options: ["Of course! 🫂", "Mine! 😈"] as [string, string] }
 ];
 
-const ChocolateDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, partnerName }) => {
+const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
   const { userId } = useParams<{ userId: string }>();
 
   // Lock state
-  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.CHOCOLATE));
-  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.CHOCOLATE));
+  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.CHOCOLATE, isActive));
+  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.CHOCOLATE, isActive));
   const [isLoading, setIsLoading] = useState(true);
 
   const [sweetness, setSweetness] = useState(50);
@@ -32,15 +32,19 @@ const ChocolateDay: React.FC<{ data: DayContent; partnerName: string }> = ({ dat
 
   // Check lock status periodically
   useEffect(() => {
+    // Initial Check
+    setIsLocked(!isDayUnlocked(DayType.CHOCOLATE, isActive));
+    setTimeRemaining(getTimeUntilUnlock(DayType.CHOCOLATE, isActive));
+
     const interval = setInterval(() => {
-      const unlocked = isDayUnlocked(DayType.CHOCOLATE);
+      const unlocked = isDayUnlocked(DayType.CHOCOLATE, isActive);
       setIsLocked(!unlocked);
       if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.CHOCOLATE));
+        setTimeRemaining(getTimeUntilUnlock(DayType.CHOCOLATE, isActive));
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive]);
 
   const handleUnwrap = () => {
     if (unwrapState !== 'wrapped') return;

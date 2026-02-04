@@ -4,7 +4,7 @@ import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
 import LockedDayScreen from '../../components/LockedDayScreen';
 import PreviewModeBanner from '../../components/PreviewModeBanner';
-import { isDayUnlocked, getTimeUntilUnlock, isUserPreviewMode } from '../../utils/dateLock';
+import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../utils/dateLock';
 import DayPreloader from '../../components/DayPreloader';
 
 import InteractiveQuiz from '../../components/InteractiveQuiz';
@@ -14,12 +14,12 @@ const HUG_QUIZ = [
   { q: "Am I huggable? 🧸", options: ["Very! ☁️", "Not really... 🌵"] as [string, string] }
 ];
 
-const HugDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, partnerName }) => {
+const HugDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
   const { userId } = useParams<{ userId: string }>();
 
   // Lock state
-  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.HUG));
-  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.HUG));
+  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.HUG, isActive));
+  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.HUG, isActive));
   const [isLoading, setIsLoading] = useState(true);
 
   const [fill, setFill] = useState(0);
@@ -32,15 +32,19 @@ const HugDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, par
 
   // Check lock status periodically
   useEffect(() => {
+    // Initial Check
+    setIsLocked(!isDayUnlocked(DayType.HUG, isActive));
+    setTimeRemaining(getTimeUntilUnlock(DayType.HUG, isActive));
+
     const interval = setInterval(() => {
-      const unlocked = isDayUnlocked(DayType.HUG);
+      const unlocked = isDayUnlocked(DayType.HUG, isActive);
       setIsLocked(!unlocked);
       if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.HUG));
+        setTimeRemaining(getTimeUntilUnlock(DayType.HUG, isActive));
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive]);
 
   // LONG PRESS LOGIC
   const startHug = () => {

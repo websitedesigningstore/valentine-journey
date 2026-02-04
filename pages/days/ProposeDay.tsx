@@ -4,7 +4,7 @@ import LockedDayScreen from '../../components/LockedDayScreen';
 import PreviewModeBanner from '../../components/PreviewModeBanner';
 import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
-import { isDayUnlocked, getTimeUntilUnlock, isUserPreviewMode } from '../../utils/dateLock';
+import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../utils/dateLock';
 import DayPreloader from '../../components/DayPreloader';
 
 const PROPOSE_QUIZ = [
@@ -17,12 +17,12 @@ const PROPOSE_QUIZ = [
 import InteractiveQuiz from '../../components/InteractiveQuiz';
 
 
-const ProposeDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, partnerName }) => {
+const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
   const { userId } = useParams<{ userId: string }>();
 
   // Lock state
-  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.PROPOSE));
-  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.PROPOSE));
+  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.PROPOSE, isActive));
+  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.PROPOSE, isActive));
   const [isLoading, setIsLoading] = useState(true);
 
   const [response, setResponse] = useState<'yes' | 'no' | null>(null);
@@ -37,15 +37,19 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data,
 
   // Check lock status periodically
   useEffect(() => {
+    // Initial Check
+    setIsLocked(!isDayUnlocked(DayType.PROPOSE, isActive));
+    setTimeRemaining(getTimeUntilUnlock(DayType.PROPOSE, isActive));
+
     const interval = setInterval(() => {
-      const unlocked = isDayUnlocked(DayType.PROPOSE);
+      const unlocked = isDayUnlocked(DayType.PROPOSE, isActive);
       setIsLocked(!unlocked);
       if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.PROPOSE));
+        setTimeRemaining(getTimeUntilUnlock(DayType.PROPOSE, isActive));
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive]);
 
   // Typewriter effect
   useEffect(() => {

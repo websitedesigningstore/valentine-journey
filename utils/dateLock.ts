@@ -15,110 +15,6 @@ const DAY_DATES: Partial<Record<DayType, Date>> = {
 const DEMO_COUNTDOWN_SECONDS = 10; // 10 seconds for demo mode
 
 /**
- * Check if admin has forced a mode globally
- */
-const getAdminForcedMode = (): 'demo' | 'live' | null => {
-    const adminMode = localStorage.getItem('admin_forced_mode');
-    if (adminMode === 'demo' || adminMode === 'live') {
-        return adminMode;
-    }
-    return null;
-};
-
-/**
- * Get user's mode preference from URL or localStorage
- * Supports both regular query params and hash-based routing
- */
-const getUserModePreference = (): 'demo' | 'live' => {
-    // Check URL parameters - both regular and hash-based
-    // For hash routing like: /#/v/userId?mode=demo
-    const hash = window.location.hash;
-    if (hash.includes('?')) {
-        const hashParams = new URLSearchParams(hash.split('?')[1]);
-        const hashMode = hashParams.get('mode');
-        if (hashMode === 'demo' || hashMode === 'live') {
-            // Store in localStorage for persistence
-            localStorage.setItem('user_mode_preference', hashMode);
-            return hashMode;
-        }
-
-        // Check old demo parameter for backward compatibility
-        if (hashParams.get('demo') === 'true') {
-            localStorage.setItem('user_mode_preference', 'demo');
-            return 'demo';
-        }
-    }
-
-    // Also check regular query params (for non-hash URLs)
-    const params = new URLSearchParams(window.location.search);
-    const urlMode = params.get('mode');
-    if (urlMode === 'demo' || urlMode === 'live') {
-        localStorage.setItem('user_mode_preference', urlMode);
-        return urlMode;
-    }
-
-    // Check old demo parameter
-    if (params.get('demo') === 'true') {
-        localStorage.setItem('user_mode_preference', 'demo');
-        return 'demo';
-    }
-
-    // Check localStorage
-    const storedMode = localStorage.getItem('user_mode_preference');
-    if (storedMode === 'demo' || storedMode === 'live') {
-        return storedMode;
-    }
-
-    // Default to live mode
-    return 'live';
-};
-
-/**
- * Check if demo mode is enabled (considering admin override)
- */
-export const isDemoMode = (): boolean => {
-    // Admin override takes precedence
-    const adminMode = getAdminForcedMode();
-    if (adminMode !== null) {
-        return adminMode === 'demo';
-    }
-
-    // Otherwise use user preference
-    return getUserModePreference() === 'demo';
-};
-
-/**
- * Set demo mode (admin override)
- */
-export const setDemoMode = (enabled: boolean): void => {
-    if (enabled) {
-        localStorage.setItem('admin_forced_mode', 'demo');
-        localStorage.setItem('demo_start_time', Date.now().toString());
-    } else {
-        localStorage.setItem('admin_forced_mode', 'live');
-        localStorage.removeItem('demo_start_time');
-    }
-};
-
-/**
- * Clear admin override (let users choose)
- */
-export const clearAdminOverride = (): void => {
-    localStorage.removeItem('admin_forced_mode');
-};
-
-/**
- * Check if user is in preview mode (not admin forced)
- */
-export const isUserPreviewMode = (): boolean => {
-    const adminMode = getAdminForcedMode();
-    if (adminMode !== null) {
-        return false; // Admin has overridden
-    }
-    return getUserModePreference() === 'demo';
-};
-
-/**
  * Get the unlock date for a specific day
  */
 export const getDayUnlockDate = (day: DayType): Date | undefined => {
@@ -127,16 +23,16 @@ export const getDayUnlockDate = (day: DayType): Date | undefined => {
 
 /**
  * Check if a day is unlocked
+ * @param day The day to check
+ * @param isActive If true, checks REAL dates (Live). If false, checks DEMO timer (Preview).
  */
-export const isDayUnlocked = (day: DayType): boolean => {
+export const isDayUnlocked = (day: DayType, isActive: boolean = true): boolean => {
     // WAITING and FINISHED are always unlocked
     if (day === DayType.WAITING || day === DayType.FINISHED) {
         return true;
     }
 
-    const demoMode = isDemoMode();
-
-    if (demoMode) {
+    if (!isActive) {
         // Demo mode: check if 10 seconds have passed since demo start
         const demoStartTime = localStorage.getItem('demo_start_time');
         if (!demoStartTime) {
@@ -157,16 +53,16 @@ export const isDayUnlocked = (day: DayType): boolean => {
 
 /**
  * Get time remaining until unlock (in milliseconds)
+ * @param day The day to check
+ * @param isActive If true, calculates based on REAL dates. If false, based on DEMO timer.
  */
-export const getTimeUntilUnlock = (day: DayType): number => {
+export const getTimeUntilUnlock = (day: DayType, isActive: boolean = true): number => {
     // WAITING and FINISHED have no countdown
     if (day === DayType.WAITING || day === DayType.FINISHED) {
         return 0;
     }
 
-    const demoMode = isDemoMode();
-
-    if (demoMode) {
+    if (!isActive) {
         // Demo mode: calculate remaining time from 10 seconds
         const demoStartTime = localStorage.getItem('demo_start_time');
         if (!demoStartTime) {

@@ -4,7 +4,7 @@ import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
 import LockedDayScreen from '../../components/LockedDayScreen';
 import PreviewModeBanner from '../../components/PreviewModeBanner';
-import { isDayUnlocked, getTimeUntilUnlock, isUserPreviewMode } from '../../utils/dateLock';
+import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../utils/dateLock';
 import DayPreloader from '../../components/DayPreloader';
 
 import InteractiveQuiz from '../../components/InteractiveQuiz';
@@ -24,12 +24,12 @@ const PROMISES_LIST = [
 
 // ... (PROMISES_LIST stays)
 
-const PromiseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, partnerName }) => {
+const PromiseDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
   const { userId } = useParams<{ userId: string }>();
 
   // Lock state
-  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.PROMISE));
-  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.PROMISE));
+  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.PROMISE, isActive));
+  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.PROMISE, isActive));
   const [isLoading, setIsLoading] = useState(true);
 
   const [checkedPromises, setCheckedPromises] = useState<number[]>([]);
@@ -38,15 +38,19 @@ const PromiseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data,
 
   // Check lock status periodically
   useEffect(() => {
+    // Initial check
+    setIsLocked(!isDayUnlocked(DayType.PROMISE, isActive));
+    setTimeRemaining(getTimeUntilUnlock(DayType.PROMISE, isActive));
+
     const interval = setInterval(() => {
-      const unlocked = isDayUnlocked(DayType.PROMISE);
+      const unlocked = isDayUnlocked(DayType.PROMISE, isActive);
       setIsLocked(!unlocked);
       if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.PROMISE));
+        setTimeRemaining(getTimeUntilUnlock(DayType.PROMISE, isActive));
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive]);
 
   const togglePromise = (index: number) => {
     if (checkedPromises.includes(index)) {

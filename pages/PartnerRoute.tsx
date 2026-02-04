@@ -80,14 +80,14 @@ const PartnerRoute: React.FC = () => {
   const renderDay = () => {
     switch (currentDay) {
       case DayType.WAITING: return <WaitingPage partnerName={config.days[DayType.WAITING].message} isPreviewMode={!config.isActive} />;
-      case DayType.ROSE: return <RoseDay data={config.days[DayType.ROSE]} partnerName={partnerName} />;
-      case DayType.PROPOSE: return <ProposeDay data={config.days[DayType.PROPOSE]} isLocked={isLocked} />;
-      case DayType.CHOCOLATE: return <ChocolateDay data={config.days[DayType.CHOCOLATE]} isLocked={isLocked} />;
-      case DayType.TEDDY: return <TeddyDay data={config.days[DayType.TEDDY]} isLocked={isLocked} />;
-      case DayType.PROMISE: return <PromiseDay data={config.days[DayType.PROMISE]} isLocked={isLocked} />;
-      case DayType.HUG: return <HugDay data={config.days[DayType.HUG]} isLocked={isLocked} />;
-      case DayType.KISS: return <KissDay data={config.days[DayType.KISS]} isLocked={isLocked} />;
-      case DayType.VALENTINE: return <ValentineDay data={config.days[DayType.VALENTINE]} userId={userId!} isLocked={isLocked} />;
+      case DayType.ROSE: return <RoseDay data={config.days[DayType.ROSE]} partnerName={partnerName} isActive={config.isActive ?? false} />;
+      case DayType.PROPOSE: return <ProposeDay data={config.days[DayType.PROPOSE]} partnerName={partnerName} isActive={config.isActive ?? false} />;
+      case DayType.CHOCOLATE: return <ChocolateDay data={config.days[DayType.CHOCOLATE]} partnerName={partnerName} isActive={config.isActive ?? false} />;
+      case DayType.TEDDY: return <TeddyDay data={config.days[DayType.TEDDY]} partnerName={partnerName} isActive={config.isActive ?? false} />;
+      case DayType.PROMISE: return <PromiseDay data={config.days[DayType.PROMISE]} partnerName={partnerName} isActive={config.isActive ?? false} />;
+      case DayType.HUG: return <HugDay data={config.days[DayType.HUG]} partnerName={partnerName} isActive={config.isActive ?? false} />;
+      case DayType.KISS: return <KissDay data={config.days[DayType.KISS]} partnerName={partnerName} isActive={config.isActive ?? false} />;
+      case DayType.VALENTINE: return <ValentineDay data={config.days[DayType.VALENTINE]} userId={userId!} isActive={config.isActive ?? false} />;
       case DayType.FINISHED: return <FinishedPage />;
       default: return <WaitingPage partnerName="" isPreviewMode={!config.isActive} />;
     }

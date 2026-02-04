@@ -4,7 +4,7 @@ import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
 import LockedDayScreen from '../../components/LockedDayScreen';
 import PreviewModeBanner from '../../components/PreviewModeBanner';
-import { isDayUnlocked, getTimeUntilUnlock, isUserPreviewMode } from '../../utils/dateLock';
+import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../utils/dateLock';
 import DayPreloader from '../../components/DayPreloader';
 
 import InteractiveQuiz from '../../components/InteractiveQuiz';
@@ -14,12 +14,12 @@ const KISS_QUIZ = [
   { q: "Your favorite kiss spot? 🙈", options: ["Lips! 👄", "Cheek! 😊"] as [string, string] }
 ];
 
-const KissDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, partnerName }) => {
+const KissDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
   const { userId } = useParams<{ userId: string }>();
 
   // Lock state
-  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.KISS));
-  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.KISS));
+  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.KISS, isActive));
+  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.KISS, isActive));
   const [isLoading, setIsLoading] = useState(true);
 
   const [kissCount, setKissCount] = useState(0);
@@ -29,15 +29,19 @@ const KissDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
 
   // Check lock status periodically
   useEffect(() => {
+    // Initial
+    setIsLocked(!isDayUnlocked(DayType.KISS, isActive));
+    setTimeRemaining(getTimeUntilUnlock(DayType.KISS, isActive));
+
     const interval = setInterval(() => {
-      const unlocked = isDayUnlocked(DayType.KISS);
+      const unlocked = isDayUnlocked(DayType.KISS, isActive);
       setIsLocked(!unlocked);
       if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.KISS));
+        setTimeRemaining(getTimeUntilUnlock(DayType.KISS, isActive));
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive]);
 
   const addKiss = (e: React.MouseEvent | React.TouchEvent) => {
     const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;

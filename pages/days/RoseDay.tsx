@@ -6,7 +6,7 @@ import LockedDayScreen from '../../components/LockedDayScreen';
 import PreviewModeBanner from '../../components/PreviewModeBanner';
 import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
-import { isDayUnlocked, getTimeUntilUnlock, isUserPreviewMode, formatTimeRemaining } from '../../utils/dateLock';
+import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../utils/dateLock';
 import DayPreloader from '../../components/DayPreloader';
 import TypewriterText from '../../components/TypewriterText';
 
@@ -17,14 +17,14 @@ const QUIZ_QUESTIONS = [
   "Kya main tumhara pehla aur aakhri rose hoon? ❤️"
 ];
 
-const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, partnerName }) => {
+const RoseDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
   const { userId } = useParams<{ userId: string }>();
   // Unique Log ID for this specific session (persists until refresh)
   const logId = React.useRef(Date.now().toString());
 
   // Lock state
-  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.ROSE));
-  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.ROSE));
+  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.ROSE, isActive));
+  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.ROSE, isActive));
 
   // States: 'scratch' -> 'reveal_message' -> 'ask_permission' -> 'offering' -> 'accepted' -> 'quiz' -> 'finished'
   const [stage, setStage] = useState<'scratch' | 'reveal_message' | 'ask_permission' | 'offering' | 'accepted' | 'quiz' | 'finished'>('scratch');
@@ -37,16 +37,20 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
 
   // Check lock status periodically
   useEffect(() => {
+    // Initial check
+    setIsLocked(!isDayUnlocked(DayType.ROSE, isActive));
+    setTimeRemaining(getTimeUntilUnlock(DayType.ROSE, isActive));
+
     const interval = setInterval(() => {
-      const unlocked = isDayUnlocked(DayType.ROSE);
+      const unlocked = isDayUnlocked(DayType.ROSE, isActive);
       setIsLocked(!unlocked);
       if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.ROSE));
+        setTimeRemaining(getTimeUntilUnlock(DayType.ROSE, isActive));
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive]);
 
   const [isLoading, setIsLoading] = useState(true);
 

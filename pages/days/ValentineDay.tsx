@@ -4,7 +4,7 @@ import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
 import LockedDayScreen from '../../components/LockedDayScreen';
 import PreviewModeBanner from '../../components/PreviewModeBanner';
-import { isDayUnlocked, getTimeUntilUnlock, isUserPreviewMode } from '../../utils/dateLock';
+import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../utils/dateLock';
 import DayPreloader from '../../components/DayPreloader';
 
 import InteractiveQuiz from '../../components/InteractiveQuiz';
@@ -21,10 +21,10 @@ const VALENTINE_QA = [
   { q: "Koi aakhri khwaish? 🌠", a: "Bas tumhara haath mere haath me rahe, hamesha. 🤝" }
 ];
 
-const ValentineDay: React.FC<{ data: DayContent; userId: string }> = ({ data, userId }) => {
+const ValentineDay: React.FC<{ data: DayContent; userId: string; isActive: boolean }> = ({ data, userId, isActive }) => {
   // Lock state
-  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.VALENTINE));
-  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.VALENTINE));
+  const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.VALENTINE, isActive));
+  const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.VALENTINE, isActive));
   const [isLoading, setIsLoading] = useState(true);
 
   const [step, setStep] = useState<'quiz' | 'proposal' | 'success'>('quiz');
@@ -37,15 +37,19 @@ const ValentineDay: React.FC<{ data: DayContent; userId: string }> = ({ data, us
 
   // Check lock status periodically
   useEffect(() => {
+    // Initial Check
+    setIsLocked(!isDayUnlocked(DayType.VALENTINE, isActive));
+    setTimeRemaining(getTimeUntilUnlock(DayType.VALENTINE, isActive));
+
     const interval = setInterval(() => {
-      const unlocked = isDayUnlocked(DayType.VALENTINE);
+      const unlocked = isDayUnlocked(DayType.VALENTINE, isActive);
       setIsLocked(!unlocked);
       if (!unlocked) {
-        setTimeRemaining(getTimeUntilUnlock(DayType.VALENTINE));
+        setTimeRemaining(getTimeUntilUnlock(DayType.VALENTINE, isActive));
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive]);
 
   const handleQuizFinish = (answers: string[]) => {
     setQuizLog(answers);
