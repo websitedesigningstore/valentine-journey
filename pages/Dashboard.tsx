@@ -1,21 +1,38 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, ValentineConfig, DayType, DEFAULT_CONTENT } from '../types';
-import { getUserConfig, updateUserConfig } from '../services/storage';
-import { getSessionUser, updateSessionActivity, clearSession } from '../utils/sessionManager';
-import ConfessionRenderer from '../components/ConfessionRenderer';
-
-const DAY_ICONS: Record<DayType, string> = {
-  [DayType.ROSE]: '🌹',
-  [DayType.PROPOSE]: '💍',
-  [DayType.CHOCOLATE]: '🍫',
-  [DayType.TEDDY]: '🧸',
-  [DayType.PROMISE]: '🤝',
-  [DayType.HUG]: '🤗',
-  [DayType.KISS]: '💋',
-  [DayType.VALENTINE]: '❤️',
-  [DayType.WAITING]: '⏳',
-  [DayType.FINISHED]: '🏁'
+const SHARE_MESSAGES: Record<DayType, { title: string, text: string }> = {
+  [DayType.ROSE]: {
+    title: "🌹 A Rose for You...",
+    text: "Ek surprise rose bhej raha hu... Sirf tumhare liye! 🌹 Isse dekhna zaroor. ❤️"
+  },
+  [DayType.PROPOSE]: {
+    title: "💍 Ek Baat Kehni Thi...",
+    text: "Dil ki baat zubaan pe aayi hai... Will you be mine forever? 🥺 Open this."
+  },
+  [DayType.CHOCOLATE]: {
+    title: "🍫 Kuch Meetha Ho Jaye?",
+    text: "Life is sweeter with you... maine tumhare liye kuch bheja hai! 🍫 Check karlo."
+  },
+  [DayType.TEDDY]: {
+    title: "🧸 A Cute Surprise!",
+    text: "Ye Teddy tumse kuch kehna chahta hai... sunogi nahi? 🧸 Sending a bear hug!"
+  },
+  [DayType.PROMISE]: {
+    title: "🤝 Ek Vaada...",
+    text: "Aaj tumse ek promise karna hai... Jo kabhi nahi tutega. 🤞 Read my promise."
+  },
+  [DayType.HUG]: {
+    title: "🤗 Need a Hug?",
+    text: "Bahut mann kar raha hai tumhe gale lagane ka... 🤗 Sending a magic hug!"
+  },
+  [DayType.KISS]: {
+    title: "💋 A Secret Gift...",
+    text: "Ek surprise kiss bheja hai... sirf tumhare liye! 😘 Catch it now."
+  },
+  [DayType.VALENTINE]: {
+    title: "❤️ My Forever Valentine",
+    text: "Sab kuch keh diya aaj... bas tumhara haan chahiye. 🌹 Will you be my Valentine?"
+  },
+  [DayType.WAITING]: { title: "Valentine Week", text: "Something special is coming..." },
+  [DayType.FINISHED]: { title: "Valentine Week", text: "Thank you for the memories!" }
 };
 
 const Dashboard: React.FC = () => {
@@ -26,7 +43,7 @@ const Dashboard: React.FC = () => {
   const [message, setMessage] = useState('');
 
   // State for Custom Share Modal
-  const [shareModalData, setShareModalData] = useState<{ day: string, link: string } | null>(null);
+  const [shareModalData, setShareModalData] = useState<{ day: string, link: string, title: string, text: string } | null>(null);
 
   useEffect(() => {
     // Check session validity
@@ -154,69 +171,68 @@ const Dashboard: React.FC = () => {
 
           <div className="space-y-4">
             {daysList.map(day => (
-              <div key={day} className="bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:shadow-md transition-shadow">
+              <div key={day} className="bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col gap-4 hover:shadow-md transition-shadow">
                 {/* Icon & Details */}
-                <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="flex items-center gap-3 w-full">
                   <span className="text-3xl bg-rose-50 p-2 rounded-lg shrink-0">{DAY_ICONS[day]}</span>
                   <div className="min-w-0 flex-1">
                     <h4 className="font-bold text-gray-800 capitalize text-lg leading-tight">{day} Day</h4>
-                    <p className="text-xs text-gray-500 truncate max-w-[220px] sm:max-w-[180px]">
-                      {config.days[day]?.message?.substring(0, 30)}...
+                    <p className="text-xs text-gray-500 truncate">
+                      {config.days[day]?.message?.substring(0, 40) || 'No message set...'}...
                     </p>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex flex-col gap-2 w-full sm:w-auto min-w-[150px]">
-                  {/* Row for Open & Share */}
-                  <div className="flex gap-2 w-full">
-                    <button
-                      onClick={() => {
-                        if (!user) return;
-                        const link = `${window.location.origin}/#/v/${user.id}?day=${day}`;
-                        window.open(link, '_blank');
-                      }}
-                      className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-100 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 border border-blue-100"
-                      title="Open in New Tab"
-                    >
-                      Open ↗️
-                    </button>
-                    <button
-                      onClick={async () => {
-                        if (!user) return;
-                        const link = `${window.location.origin}/#/v/${user.id}?day=${day}`;
-                        const shareData = {
-                          title: `Happy ${day} Day!`,
-                          text: `Mere liye kuch khaas hai tumhare paas... Dekho na? 🥺❤️\n\n${link}`,
-                          url: link
-                        };
+                {/* Actions Footer */}
+                <div className="grid grid-cols-3 gap-2 w-full pt-3 border-t border-rose-50">
+                  <button
+                    onClick={() => {
+                      if (!user) return;
+                      const link = `${window.location.origin}/#/v/${user.id}?day=${day}`;
+                      window.open(link, '_blank');
+                    }}
+                    className="flex text-blue-600 px-2 py-2 rounded-lg hover:bg-blue-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-blue-100"
+                    title="Open in New Tab"
+                  >
+                    Open ↗️
+                  </button>
 
-                        // Try Native Share First
-                        if (navigator.share) {
-                          try {
-                            await navigator.share(shareData);
-                            return; // Success, exit
-                          } catch (err) {
-                            console.log('Share closed/failed, showing fallback', err);
-                          }
+                  <button
+                    onClick={async () => {
+                      if (!user) return;
+                      const link = `${window.location.origin}/#/v/${user.id}?day=${day}`;
+                      const content = SHARE_MESSAGES[day] || { title: `Happy ${day} Day!`, text: `Check this out! ${link}` };
+
+                      const shareData = {
+                        title: content.title,
+                        text: `${content.text}\n\n${link}`,
+                        url: link
+                      };
+
+                      // Try Native Share First
+                      if (navigator.share) {
+                        try {
+                          await navigator.share(shareData);
+                          return; // Success, exit
+                        } catch (err) {
+                          console.log('Share closed/failed, showing fallback', err);
                         }
+                      }
 
-                        // Fallback to Manual Modal (for HTTP/PC compatibility)
-                        setShareModalData({ day, link });
-                      }}
-                      className="flex-1 bg-indigo-50 text-indigo-600 px-3 py-2 rounded-lg hover:bg-indigo-100 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 border border-indigo-100"
-                      title="Share Link"
-                    >
-                      Share 📤
-                    </button>
-                  </div>
+                      // Fallback to Manual Modal (for HTTP/PC compatibility)
+                      setShareModalData({ day, link, title: content.title, text: content.text });
+                    }}
+                    className="flex text-indigo-600 px-2 py-2 rounded-lg hover:bg-indigo-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-indigo-100"
+                    title="Share Link"
+                  >
+                    Share 📤
+                  </button>
 
-                  {/* Edit Button */}
                   <button
                     onClick={() => startEditing(day)}
-                    className="w-full bg-rose-50 text-rose-600 px-3 py-2 rounded-lg hover:bg-rose-100 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 border border-rose-100"
+                    className="flex text-rose-600 px-2 py-2 rounded-lg hover:bg-rose-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-rose-100"
                   >
-                    ✏️ Edit Message
+                    ✏️ Edit
                   </button>
                 </div>
               </div>
@@ -313,7 +329,7 @@ const Dashboard: React.FC = () => {
             <div className="space-y-3">
               {/* WhatsApp */}
               <a
-                href={`https://wa.me/?text=${encodeURIComponent(`Mere liye kuch khaas hai tumhare paas... Dekho na? 🥺❤️\n\n${shareModalData.link}`)}`}
+                href={`https://wa.me/?text=${encodeURIComponent(`${shareModalData.text}\n\n${shareModalData.link}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-3 w-full bg-[#25D366] text-white py-3 rounded-xl font-bold hover:bg-[#20bd5a] transition-colors shadow-sm"
@@ -335,7 +351,7 @@ const Dashboard: React.FC = () => {
 
               {/* Telegram */}
               <a
-                href={`https://t.me/share/url?url=${encodeURIComponent(shareModalData.link)}&text=${encodeURIComponent("Mere liye kuch khaas hai tumhare paas... Dekho na? 🥺❤️")}`}
+                href={`https://t.me/share/url?url=${encodeURIComponent(shareModalData.link)}&text=${encodeURIComponent(shareModalData.text)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-3 w-full bg-[#0088cc] text-white py-3 rounded-xl font-bold hover:bg-[#0077b5] transition-colors shadow-sm"
