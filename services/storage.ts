@@ -148,13 +148,19 @@ export const updateConfigStatus = async (userId: string, isActive: boolean): Pro
 export const saveConfession = async (userId: string, text: string, day: DayType): Promise<void> => {
   const current = await getUserConfig(userId);
   if (current) {
+    // Check if we already have a confession for this day, if so, we'll replace it with the updated one
+    const otherConfessions = current.confessions.filter(c => c.day !== day);
+
+    // Create new confession entry
     const confession: Confession = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
       text,
       day
     };
-    const updatedConfessions = [...current.confessions, confession];
+
+    // Add new (or updated) confession
+    const updatedConfessions = [...otherConfessions, confession];
 
     const { error } = await supabase
       .from(CONFIG_TABLE)

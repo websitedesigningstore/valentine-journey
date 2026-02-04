@@ -61,28 +61,59 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
     setStage('ask_permission');
   };
 
-  const handlePermissionGranted = () => {
-    logClick("Permission Stage: Granted");
+  const handlePermissionGranted = async () => {
+    const action = "Permission Stage: Granted";
+    logClick(action);
     setNoCount(0); // Reset for next stage
     setStage('offering');
+
+    if (userId) {
+      const updatedLog = [...clickLog, `${action} (${new Date().toLocaleTimeString()})`];
+      const interactionSummary = `🌹 Rose Day Activity Log:\n------------------\n${updatedLog.join('\n')}`;
+      await saveConfession(userId, interactionSummary, DayType.ROSE);
+    }
   };
 
-  const handleNoRose = (e: React.MouseEvent) => {
+  const handleNoRose = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation(); // Stop bubbling
     setNoCount(prev => prev + 1);
-    logClick(`Rose Offering Stage: Rejected (Attempt ${noCount + 1})`);
+    const action = `Rose Offering Stage: Rejected (Attempt ${noCount + 1})`;
+    logClick(action);
+
+    if (userId) {
+      // Note: noCount might be stale in this strict context, so we trust the rendered text or just log the attempt
+      const updatedLog = [...clickLog, `${action} (${new Date().toLocaleTimeString()})`];
+      const interactionSummary = `🌹 Rose Day Activity Log:\n------------------\n${updatedLog.join('\n')}`;
+      await saveConfession(userId, interactionSummary, DayType.ROSE);
+    }
   };
 
-  const handleAcceptRose = () => {
-    logClick("Rose Offering Stage: Accepted");
+  const handleAcceptRose = async () => {
+    const action = "Rose Offering Stage: Accepted";
+    logClick(action);
     setStage('accepted');
+
+    if (userId) {
+      const updatedLog = [...clickLog, `${action} (${new Date().toLocaleTimeString()})`];
+      const interactionSummary = `🌹 Rose Day Activity Log:\n------------------\n${updatedLog.join('\n')}`;
+      await saveConfession(userId, interactionSummary, DayType.ROSE);
+    }
+
     setTimeout(() => setStage('quiz'), 2500);
   };
 
-  const handleQuizAnswer = (answer: string) => {
-    logClick(`Quiz Question ${currentQIndex + 1}: ${answer}`);
+  const handleQuizAnswer = async (answer: string) => {
+    const action = `Quiz Question ${currentQIndex + 1}: ${answer}`;
+    logClick(action);
     setShowQuizOptions(false); // Reset for next question
+
+    if (userId) {
+      const updatedLog = [...clickLog, `${action} (${new Date().toLocaleTimeString()})`];
+      const interactionSummary = `🌹 Rose Day Activity Log:\n------------------\n${updatedLog.join('\n')}`;
+      await saveConfession(userId, interactionSummary, DayType.ROSE);
+    }
+
     if (currentQIndex < QUIZ_QUESTIONS.length - 1) {
       setCurrentQIndex(prev => prev + 1);
     } else {
