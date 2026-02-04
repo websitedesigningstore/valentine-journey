@@ -10,7 +10,7 @@ import ScratchCard from '../../components/ScratchCard';
 import InteractiveQuiz from '../../components/InteractiveQuiz';
 
 const CHOCOLATE_QUIZ = [
-  { q: "Kya aaj main sweet lag rahi hu? 🍬", options: ["Chashni se bhi zyada! 🍯", "Ha thik thak... 🙄"] as [string, string] },
+  { q: "Aaj mera look sweet hai na? 🍬", options: ["Chashni se bhi zyada! 🍯", "Ha thik thak... 🙄"] as [string, string] },
   { q: "Kya main chocolate se bhi sweet hu? 🍫", options: ["Bohat zyada! ❤️", "Bilkul barabar! 🤝"] as [string, string] },
   { q: "Apna last piece share karoge? 🥺", options: ["Sirf tumhare saath! 🫂", "Bilkul nahi! 😈"] as [string, string] }
 ];
@@ -121,7 +121,7 @@ const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: 
               <p className="text-xl text-gray-800 font-hand leading-relaxed text-center">"{data.message}"</p>
 
               <div className="mt-6 w-full bg-amber-50 p-4 rounded-xl border border-amber-100">
-                <label className="block text-sm font-bold text-amber-900 mb-2 text-center">Kitni sweet ho tum? 🍬</label>
+                <label className="block text-sm font-bold text-amber-900 mb-2 text-center">Tum kitne sweet ho? 🍬</label>
                 <input
                   type="range"
                   min="0"
