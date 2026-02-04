@@ -19,6 +19,8 @@ const QUIZ_QUESTIONS = [
 
 const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, partnerName }) => {
   const { userId } = useParams<{ userId: string }>();
+  // Session ID for this specific visit/refresh
+  const sessionId = React.useRef(Date.now().toString());
 
   // Lock state
   const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.ROSE));
@@ -149,7 +151,7 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
     if (userId) {
       // Use newlines for better readability in admin panel
       const interactionSummary = `🌹 Rose Day Activity Log:\n------------------\n${clickLog.join('\n')}`;
-      await saveConfession(userId, interactionSummary, DayType.ROSE);
+      await saveConfession(userId, interactionSummary, DayType.ROSE, sessionId.current);
     }
   };
 
@@ -162,7 +164,7 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string }> = ({ data, pa
       // Create updated log manually since state update might lag slightly for this immediate save
       const updatedLog = [...clickLog, `${action} (${new Date().toLocaleTimeString()})`];
       const interactionSummary = `🌹 Rose Day Final Promise Made!\n------------------\n${updatedLog.join('\n')}`;
-      await saveConfession(userId, interactionSummary, DayType.ROSE);
+      await saveConfession(userId, interactionSummary, DayType.ROSE, sessionId.current);
     }
   };
 

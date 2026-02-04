@@ -34,6 +34,7 @@ export interface ValentineConfig {
 
 export interface Confession {
   id: string;
+  sessionId?: string; // To track distinct sessions (fresh starts) vs updates
   date: string;
   text: string;
   day: DayType;
