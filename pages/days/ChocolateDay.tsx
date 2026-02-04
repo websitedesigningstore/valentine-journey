@@ -10,9 +10,9 @@ import ScratchCard from '../../components/ScratchCard';
 import InteractiveQuiz from '../../components/InteractiveQuiz';
 
 const CHOCOLATE_QUIZ = [
-  { q: "Do I look sweet today? 🍬", options: ["Sweeter than sugar! 🍯", "Just Okay... 🙄"] as [string, string] },
-  { q: "Am I sweeter than chocolate? 🍫", options: ["Much Sweeter! ❤️", "Equal! 🤝"] as [string, string] },
-  { q: "Will you share your last piece? 🥺", options: ["Of course! 🫂", "Mine! 😈"] as [string, string] }
+  { q: "Kya aaj main sweet lag rahi hu? 🍬", options: ["Chashni se bhi zyada! 🍯", "Ha thik thak... 🙄"] as [string, string] },
+  { q: "Kya main chocolate se bhi sweet hu? 🍫", options: ["Bohat zyada! ❤️", "Bilkul barabar! 🤝"] as [string, string] },
+  { q: "Apna last piece share karoge? 🥺", options: ["Sirf tumhare saath! 🫂", "Bilkul nahi! 😈"] as [string, string] }
 ];
 
 const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
@@ -151,7 +151,7 @@ const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: 
           <div className="w-full animate-fade-in-up mb-8">
             <InteractiveQuiz
               questions={CHOCOLATE_QUIZ}
-              title="Sweet Talk Time... 🍬"
+              title="Kuch Meethi Baatein... 🍬"
               themeColor="amber"
               onComplete={(answers) => handleFinish(answers)}
             />

@@ -14,8 +14,8 @@ const PRELOAD_DATA: Record<DayType, { text: string; icon: string; color: string 
         color: "bg-pink-50 text-pink-600"
     },
     [DayType.CHOCOLATE]: {
-        text: "Zindagi me thodi mithas ghulne wali hai... �", // Some sweetness is about to dissolve in life...
-        icon: "�",
+        text: "Zindagi me thodi mithas ghulne wali hai... 🍫", // Some sweetness is about to dissolve in life...
+        icon: "🍫",
         color: "bg-amber-50 text-amber-800"
     },
     [DayType.TEDDY]: {
