@@ -47,7 +47,7 @@ const LandingPage: React.FC = () => {
             💖 Valentine Journey
           </h1>
           <p className="text-gray-600 text-sm">
-            {isLogin ? 'Welcome back to your love story' : 'Create your unique Valentine experience'}
+            {isLogin ? 'Welcome back! Your special journey awaits...' : 'Something special is waiting for you... 💫'}
           </p>
         </div>
 
@@ -56,8 +56,8 @@ const LandingPage: React.FC = () => {
             type="button"
             onClick={() => setIsLogin(true)}
             className={`flex-1 py-2 rounded-lg font-medium transition-all ${isLogin
-                ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md'
-                : 'bg-white/50 text-gray-600 hover:bg-white/70'
+              ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md'
+              : 'bg-white/50 text-gray-600 hover:bg-white/70'
               }`}
           >
             Login
@@ -66,8 +66,8 @@ const LandingPage: React.FC = () => {
             type="button"
             onClick={() => setIsLogin(false)}
             className={`flex-1 py-2 rounded-lg font-medium transition-all ${!isLogin
-                ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md'
-                : 'bg-white/50 text-gray-600 hover:bg-white/70'
+              ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md'
+              : 'bg-white/50 text-gray-600 hover:bg-white/70'
               }`}
           >
             Register
