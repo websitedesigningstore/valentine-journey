@@ -220,13 +220,13 @@ const Dashboard: React.FC = () => {
                   <button
                     onClick={async () => {
                       if (!user) return;
-                      const link = `${window.location.origin}/#/v/${user.id}?day=${day}`;
-                      const content = SHARE_MESSAGES[day] || { title: `Happy ${day} Day!`, text: `Check this out! ${link}` };
+                      const shareLink = `${window.location.origin}/shares/${day.toLowerCase()}.html?uid=${user.id}`;
+                      const content = SHARE_MESSAGES[day] || { title: `Happy ${day} Day!`, text: `Check this out! ${shareLink}` };
 
                       const shareData = {
                         title: content.title,
-                        text: `${content.text}\n\n${link}`,
-                        url: link
+                        text: `${content.text}\n\n${shareLink}`,
+                        url: shareLink
                       };
 
                       // Try Native Share First
@@ -240,7 +240,7 @@ const Dashboard: React.FC = () => {
                       }
 
                       // Fallback to Manual Modal (for HTTP/PC compatibility)
-                      setShareModalData({ day, link, title: content.title, text: content.text });
+                      setShareModalData({ day, link: shareLink, title: content.title, text: content.text });
                     }}
                     className="flex text-indigo-600 px-2 py-2 rounded-lg hover:bg-indigo-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-indigo-100"
                     title="Share Link"
