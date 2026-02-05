@@ -299,14 +299,14 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Actions Footer */}
-                <div className="grid grid-cols-3 gap-1 md:gap-2 w-full pt-3 border-t border-rose-50">
+                <div className="flex flex-wrap gap-2 w-full pt-3 border-t border-rose-50">
                   <button
                     onClick={() => {
                       if (!user) return;
                       const link = `${window.location.origin}/#/v/${user.id}?day=${day}`;
                       window.open(link, '_blank');
                     }}
-                    className="flex text-blue-600 px-1.5 md:px-2 py-2 rounded-lg hover:bg-blue-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-blue-100"
+                    className="flex-1 min-w-[30%] text-blue-600 px-1 py-2 rounded-lg hover:bg-blue-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-blue-100 whitespace-nowrap"
                     title="Open in New Tab"
                   >
                     Open ↗️
@@ -337,7 +337,7 @@ const Dashboard: React.FC = () => {
                       // Fallback to Manual Modal (for HTTP/PC compatibility)
                       setShareModalData({ day, link: shareLink, title: content.title, text: content.text });
                     }}
-                    className="flex text-indigo-600 px-1.5 md:px-2 py-2 rounded-lg hover:bg-indigo-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-indigo-100"
+                    className="flex-1 min-w-[30%] text-indigo-600 px-1 py-2 rounded-lg hover:bg-indigo-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-indigo-100 whitespace-nowrap"
                     title="Share Link"
                   >
                     Share 📤
@@ -345,7 +345,7 @@ const Dashboard: React.FC = () => {
 
                   <button
                     onClick={() => startEditing(day)}
-                    className="flex text-rose-600 px-1.5 md:px-2 py-2 rounded-lg hover:bg-rose-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-rose-100"
+                    className="flex-1 min-w-[30%] text-rose-600 px-1 py-2 rounded-lg hover:bg-rose-50 font-bold text-xs items-center justify-center gap-1 transition-all active:scale-95 border border-rose-100 whitespace-nowrap"
                   >
                     ✏️ Edit
                   </button>
