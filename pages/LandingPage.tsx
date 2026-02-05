@@ -6,6 +6,7 @@ import FloatingHearts from '../components/FloatingHearts';
 
 const LandingPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [mobile, setMobile] = useState('');
   const [username, setUsername] = useState('');
   const [partnerName, setPartnerName] = useState('');
   const [pin, setPin] = useState('');
@@ -21,11 +22,11 @@ const LandingPage: React.FC = () => {
 
     try {
       if (isLogin) {
-        const user = await loginUser(username, pin);
+        const user = await loginUser(mobile, pin);
         setSession(user); // Set session with timestamp
         navigate('/dashboard');
       } else {
-        const user = await registerUser(username, partnerName, pin);
+        const user = await registerUser(username, mobile, partnerName, pin);
         setSession(user); // Set session with timestamp
         navigate('/dashboard');
       }
@@ -75,30 +76,47 @@ const LandingPage: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1 ml-1">Your Name</label>
+            <label className="block text-sm font-bold text-gray-700 mb-1 ml-1">Mobile Number</label>
             <input
-              type="text"
+              type="tel"
               required
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white/70 border-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-inner text-gray-800 placeholder-gray-400"
-              placeholder="e.g. Rahul"
+              pattern="[0-9]{10}"
+              maxLength={10}
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
+              className="w-full px-4 py-3 rounded-xl bg-white/70 border-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-inner text-gray-800 placeholder-gray-400 font-mono tracking-wider"
+              placeholder="9876543210"
             />
           </div>
 
           {!isLogin && (
-            <div className="animate-fade-in-up">
-              <label className="block text-sm font-bold text-gray-700 mb-1 ml-1">Partner's Name</label>
-              <input
-                type="text"
-                required
-                value={partnerName}
-                onChange={(e) => setPartnerName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/70 border-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-inner text-gray-800 placeholder-gray-400"
-                placeholder="e.g. Anjali"
-              />
-            </div>
+            <>
+              <div className="animate-fade-in-up">
+                <label className="block text-sm font-bold text-gray-700 mb-1 ml-1">Your Name</label>
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-white/70 border-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-inner text-gray-800 placeholder-gray-400"
+                  placeholder="e.g. Rahul"
+                />
+              </div>
+
+              <div className="animate-fade-in-up">
+                <label className="block text-sm font-bold text-gray-700 mb-1 ml-1">Partner's Name</label>
+                <input
+                  type="text"
+                  required
+                  value={partnerName}
+                  onChange={(e) => setPartnerName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-white/70 border-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-inner text-gray-800 placeholder-gray-400"
+                  placeholder="e.g. Anjali"
+                />
+              </div>
+            </>
           )}
 
           <div>

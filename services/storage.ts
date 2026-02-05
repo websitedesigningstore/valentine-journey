@@ -5,23 +5,24 @@ import bcrypt from 'bcryptjs';
 const USERS_TABLE = 'users';
 const CONFIG_TABLE = 'valentine_config';
 
-export const registerUser = async (username: string, partnerName: string, pin: string): Promise<User> => {
+export const registerUser = async (username: string, mobile: string, partnerName: string, pin: string): Promise<User> => {
 
-  // 1. Check if username exists
+  // 1. Check if mobile number exists (Unique Identifier)
   const { data: existingUser } = await supabase
     .from(USERS_TABLE)
     .select('id')
-    .eq('username', username)
+    .eq('mobile', mobile)
     .single();
 
-  if (existingUser) throw new Error("Username already taken");
+  if (existingUser) throw new Error("Mobile number already registered");
 
   // 2. Hash PIN for security
   const hashedPin = await bcrypt.hash(pin, 10);
 
   // 3. Create User
   const newUser = {
-    username,
+    username, // Display Name
+    mobile,   // Login ID
     partner_name: partnerName,
     pin: hashedPin
   };
@@ -56,28 +57,30 @@ export const registerUser = async (username: string, partnerName: string, pin: s
   return {
     id: user.id,
     username: user.username,
+    mobile: user.mobile,
     partnerName: user.partner_name,
     pin: user.pin
   };
 };
 
-export const loginUser = async (username: string, pin: string): Promise<User> => {
-  // First, get user by username only
+export const loginUser = async (mobile: string, pin: string): Promise<User> => {
+  // First, get user by mobile
   const { data: user, error } = await supabase
     .from(USERS_TABLE)
     .select('*')
-    .eq('username', username)
+    .eq('mobile', mobile)
     .single();
 
-  if (error || !user) throw new Error("Invalid credentials");
+  if (error || !user) throw new Error("Invalid mobile number or unregistered.");
 
   // Then verify PIN using bcrypt
   const isValidPin = await bcrypt.compare(pin, user.pin);
-  if (!isValidPin) throw new Error("Invalid credentials");
+  if (!isValidPin) throw new Error("Invalid PIN");
 
   return {
     id: user.id,
     username: user.username,
+    mobile: user.mobile,
     partnerName: user.partner_name,
     pin: user.pin
   };
@@ -95,6 +98,7 @@ export const getUser = async (userId: string): Promise<User | null> => {
   return {
     id: user.id,
     username: user.username,
+    mobile: user.mobile,
     partnerName: user.partner_name,
     pin: user.pin
   };

@@ -1,6 +1,7 @@
 export interface User {
   id: string;
-  username: string;
+  username: string; // Still used for display name
+  mobile: string;   // New unique identifier
   partnerName: string;
   pin: string; // Simple auth
 }

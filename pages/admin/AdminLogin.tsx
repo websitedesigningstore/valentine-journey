@@ -74,10 +74,7 @@ const AdminLogin: React.FC = () => {
                     </button>
                 </form>
 
-                <div className="mt-6 text-center text-gray-400 text-xs">
-                    <p>Default: admin / admin123</p>
-                    <p className="mt-1">⚠️ Change password after first login</p>
-                </div>
+
             </div>
         </div>
     );
