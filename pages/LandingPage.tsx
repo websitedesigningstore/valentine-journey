@@ -21,13 +21,23 @@ const LandingPage: React.FC = () => {
     setError('');
 
     try {
+      if (!mobile || mobile.length !== 10) {
+        throw new Error("Please enter a valid 10-digit mobile number");
+      }
+      if (!pin || pin.length < 4) {
+        throw new Error("PIN must be 4 digits");
+      }
+
       if (isLogin) {
         const user = await loginUser(mobile, pin);
-        setSession(user); // Set session with timestamp
+        setSession(user);
         navigate('/dashboard');
       } else {
+        if (!username.trim() || !partnerName.trim()) {
+          throw new Error("Please enter both your name and partner's name");
+        }
         const user = await registerUser(username, mobile, partnerName, pin);
-        setSession(user); // Set session with timestamp
+        setSession(user);
         navigate('/dashboard');
       }
     } catch (err: any) {
