@@ -13,6 +13,7 @@ interface UserData {
     banned_reason?: string;
     last_active?: string;
     isActive?: boolean;
+    mobile: string;
 }
 
 const UserManagement: React.FC = () => {
@@ -153,7 +154,7 @@ const UserManagement: React.FC = () => {
                 <div className="mb-6">
                     <input
                         type="text"
-                        placeholder="Search by username or partner name..."
+                        placeholder="Search by username, partner name or mobile..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full max-w-md px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -170,6 +171,7 @@ const UserManagement: React.FC = () => {
                                 <thead className="bg-gray-900">
                                     <tr>
                                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase">Username</th>
+                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase">Mobile</th>
                                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase">Partner</th>
                                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase">Registered</th>
                                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase">Status</th>
@@ -180,6 +182,7 @@ const UserManagement: React.FC = () => {
                                     {users.map((user) => (
                                         <tr key={user.id} className="hover:bg-gray-700/50">
                                             <td className="px-6 py-4 text-white font-medium">{user.username}</td>
+                                            <td className="px-6 py-4 text-gray-300 font-mono text-xs">{user.mobile}</td>
                                             <td className="px-6 py-4 text-gray-300">{user.partner_name}</td>
                                             <td className="px-6 py-4 text-gray-400 text-sm">
                                                 {new Date(user.created_at).toLocaleDateString()}

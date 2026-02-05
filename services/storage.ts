@@ -208,7 +208,7 @@ export const getAllUsers = async (page = 1, limit = 20, search = '') => {
         valentine_config!valentine_config_user_id_fkey (is_active)
       `, { count: 'exact' });
 
-    if (search) query = query.or(`username.ilike.%${search}%,partner_name.ilike.%${search}%`);
+    if (search) query = query.or(`username.ilike.%${search}%,partner_name.ilike.%${search}%,mobile.ilike.%${search}%`);
 
     const { data, error, count } = await query
       .order('created_at', { ascending: false })
