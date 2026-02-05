@@ -82,7 +82,8 @@ const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: 
 
   const handleFinishQuiz = async (answers: string[]) => {
     if (userId) {
-      const log = `Chocolate Day: Picked ${selectedChoco} | Quiz: ${answers.join(', ')}`;
+      const sweetness = 100;
+      const log = `Chocolate Day Activity Log: Picked ${selectedChoco} | Quiz: ${answers.join(', ')} | Sweetness: ${sweetness}%`;
       await saveConfession(userId, log, DayType.CHOCOLATE);
     }
     setStage('finale');

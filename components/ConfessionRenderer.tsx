@@ -78,9 +78,17 @@ const ConfessionRenderer: React.FC<ConfessionRendererProps> = ({ day, text }) =>
                         <div className="absolute top-0 right-0 text-6xl opacity-10 rotate-12">💍</div>
                         <h3 className="text-2xl font-bold text-rose-600 mb-2 animate-pulse">SHE SAID YES! 💍</h3>
                         <p className="text-gray-600 italic text-sm">"Proposal Accepted on Propose Day"</p>
-                        <div className="mt-2 text-xs bg-white inline-block px-3 py-1 rounded-full text-rose-400 font-bold border border-rose-100">
-                            Forever & Always ❤️
-                        </div>
+                        <p className="mt-2 text-rose-600 font-hand font-bold">Forever & Always ❤️</p>
+
+                        {/* Promise Section */}
+                        {text.includes("Promise:") && (
+                            <div className="mt-4 pt-3 border-t border-rose-100 animate-fade-in-up">
+                                <p className="text-xs font-bold text-rose-400 uppercase tracking-widest mb-1">PROMISE MADE</p>
+                                <p className="text-sm font-medium text-rose-700">
+                                    "Will stay happy forever 🤝"
+                                </p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

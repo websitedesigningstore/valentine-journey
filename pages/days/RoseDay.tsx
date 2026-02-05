@@ -284,7 +284,7 @@ const RoseDay: React.FC<{ data: DayContent; partnerName: string; isActive: boole
         {stage === 'offering' && (
           <div className="flex flex-col items-center animate-zoom-in max-w-sm w-full relative z-20">
             <div className="text-9xl mb-8 animate-float drop-shadow-2xl filter brightness-110">🌹</div>
-            <p className="text-xl font-hand text-gray-700 mb-8 text-center italic min-h-[3.5rem]">
+            <p className="text-3xl font-hand text-rose-900 font-bold mb-10 text-center leading-relaxed drop-shadow-sm min-h-[3.5rem]">
               "<TypewriterText text="Sirf tumhare liye... Kyunki tum is rose se bhi zyada beautiful ho." speed={75} />"
             </p>
 

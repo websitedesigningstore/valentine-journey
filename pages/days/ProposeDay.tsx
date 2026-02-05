@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import LockedDayScreen from '../../components/LockedDayScreen';
-import PreviewModeBanner from '../../components/PreviewModeBanner';
+import DayPreloader from '../../components/DayPreloader';
+import InteractiveQuiz from '../../components/InteractiveQuiz';
 import { DayContent, DayType } from '../../types';
 import { saveConfession } from '../../services/storage';
-import { isDayUnlocked, getTimeUntilUnlock, formatTimeRemaining } from '../../utils/dateLock';
-import DayPreloader from '../../components/DayPreloader';
+import { isDayUnlocked, getTimeUntilUnlock } from '../../utils/dateLock';
 
 const PROPOSE_QUIZ = [
   { q: "Promise karo, hamesha saath rahoge? 🤝", options: ["Ha, Hamesha! ❤️", "Puri Koshish! 😅"] as [string, string] },
@@ -14,20 +14,23 @@ const PROPOSE_QUIZ = [
   { q: "Big Question ke liye taiyaar ho? 💍", options: ["Hamesha Ready! 😎", "Thoda Nervous... 🙈"] as [string, string] }
 ];
 
-import InteractiveQuiz from '../../components/InteractiveQuiz';
-
-
 const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: boolean }> = ({ data, partnerName, isActive }) => {
   const { userId } = useParams<{ userId: string }>();
+
+  // Unique Log ID for this specific session
+  const logId = useRef(Date.now().toString());
 
   // Lock state
   const [isLocked, setIsLocked] = useState(!isDayUnlocked(DayType.PROPOSE, isActive));
   const [timeRemaining, setTimeRemaining] = useState(getTimeUntilUnlock(DayType.PROPOSE, isActive));
   const [isLoading, setIsLoading] = useState(true);
 
+  // Interaction State
   const [response, setResponse] = useState<'yes' | 'no' | null>(null);
   const [noCount, setNoCount] = useState(0);
   const [typedText, setTypedText] = useState('');
+  const [promiseMade, setPromiseMade] = useState(false);
+  const [rejections, setRejections] = useState<string[]>([]);
 
   // Quiz State
   const [quizComplete, setQuizComplete] = useState(false);
@@ -37,7 +40,6 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
 
   // Check lock status periodically
   useEffect(() => {
-    // Initial Check
     setIsLocked(!isDayUnlocked(DayType.PROPOSE, isActive));
     setTimeRemaining(getTimeUntilUnlock(DayType.PROPOSE, isActive));
 
@@ -64,17 +66,52 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
     }
   }, [fullText, quizComplete, response]);
 
+  // Handlers
+  const logRejection = async (count: number) => {
+    const reaction = ["No?", "Are you sure?", "Soch lo!", "Pakka?", "Dil toot jayega 💔", "Last chance!", "Akal thikane hai? 😂"][Math.min(count, 6)];
+    const newRejection = `❌ Triggered No: Attempt ${count + 1} (${reaction})`;
+
+    // Update local state first
+    const updatedRejections = [...rejections, newRejection];
+    setRejections(updatedRejections);
+
+    // Save to DB immediately
+    if (userId) {
+      const log = `Propose Day Activity Log: ${quizLog.join(', ')} | ${updatedRejections.join(' | ')}`;
+      await saveConfession(userId, log, DayType.PROPOSE, logId.current);
+    }
+  };
+
   const handleNo = (e: React.MouseEvent) => {
     e.preventDefault();
-    setNoCount(prev => prev + 1);
+    setNoCount(prev => {
+      const newCount = prev + 1;
+      logRejection(prev);
+      return newCount;
+    });
   };
 
   const handleYes = async () => {
     setResponse('yes');
     if (userId) {
-      const log = `Propose Day Activity Log: ${quizLog.join(', ')} | Final: SHE SAID YES! 💍❤️`;
-      await saveConfession(userId, log, DayType.PROPOSE);
+      const rejectionPart = rejections.length > 0 ? ` | ${rejections.join(' | ')}` : '';
+      const log = `Propose Day Activity Log: ${quizLog.join(', ')}${rejectionPart} | Final: SHE SAID YES! 💍❤️`;
+      await saveConfession(userId, log, DayType.PROPOSE, logId.current);
     }
+  };
+
+  const handleFinalPromise = async () => {
+    setPromiseMade(true);
+    if (userId) {
+      const rejectionPart = rejections.length > 0 ? ` | ${rejections.join(' | ')}` : '';
+      const log = `Propose Day Activity Log: ${quizLog.join(', ')}${rejectionPart} | Final: SHE SAID YES! 💍❤️ | Promise: Will stay happy forever 🤝`;
+      await saveConfession(userId, log, DayType.PROPOSE, logId.current);
+    }
+  };
+
+  const handleQuizFinish = (answers: string[]) => {
+    setQuizLog(answers);
+    setQuizComplete(true);
   };
 
   const getNoButtonStyles = () => {
@@ -91,11 +128,6 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
   const getNoText = () => {
     const texts = ["No?", "Are you sure?", "Soch lo!", "Pakka?", "Dil toot jayega 💔", "Last chance!", "Akal thikane hai? 😂"];
     return texts[Math.min(noCount, texts.length - 1)];
-  };
-
-  const handleQuizFinish = (answers: string[]) => {
-    setQuizLog(answers);
-    setQuizComplete(true);
   };
 
   // 1. Show Preloader First
@@ -124,10 +156,23 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
             <div className="text-8xl mb-6 animate-ping">💖</div>
             <h1 className="text-5xl mb-4 animate-bounce">💍 ❤️</h1>
             <h2 className="text-3xl font-hand text-rose-600 font-bold mb-4 drop-shadow-md">She Said YES! 💍❤️</h2>
-            <div className="glass-card p-6 rounded-xl mt-4 max-w-sm text-center">
-              <p className="text-gray-700 text-lg">"Promise, tum hamesha khush rahoge!"</p>
-              <p className="text-sm text-gray-400 mt-4">(Chocolate Day ka intezaar hai... abhi aur surprises baaki hain! 🍫)</p>
-            </div>
+
+            {!promiseMade ? (
+              <div className="glass-card p-6 rounded-xl mt-4 max-w-sm text-center animate-fade-in">
+                <p className="text-gray-700 text-lg mb-6">"Promise karo, tum hamesha khush rahoge?"</p>
+                <button
+                  onClick={handleFinalPromise}
+                  className="bg-rose-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform animate-pulse"
+                >
+                  I Promise! 🤝❤️
+                </button>
+              </div>
+            ) : (
+              <div className="glass-card p-6 rounded-xl mt-4 max-w-sm text-center animate-zoom-in">
+                <p className="text-xl font-hand font-bold text-rose-600 mb-2">Promise Locked! 🔒✨</p>
+                <p className="text-sm text-gray-400">(Chocolate Day ka intezaar hai... abhi aur surprises baaki hain! 🍫)</p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="w-full max-w-md flex flex-col gap-6">
@@ -166,7 +211,7 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
 
                   {/* Runaway No Button */}
                   <button
-                    onMouseEnter={() => { if (noCount === 0 || noCount > 0) setNoCount(prev => prev + 1); }}
+                    onMouseEnter={handleNo}
                     onClick={handleNo}
                     style={noCount > 0 ? getNoButtonStyles() : undefined}
                     className={`w-full bg-gray-200 text-gray-500 py-3 rounded-xl font-medium hover:bg-gray-300 transition-all z-10 ${noCount > 0 ? 'absolute top-16 left-0' : ''}`}
@@ -182,8 +227,6 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
       </div>
     </>
   );
-
-
 };
 
 export default ProposeDay;
