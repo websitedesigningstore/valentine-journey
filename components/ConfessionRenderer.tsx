@@ -68,6 +68,17 @@ const ConfessionRenderer: React.FC<ConfessionRendererProps> = ({ day, text }) =>
                                     </div>
                                 )
                             }
+                            if (logItem.includes("Triggered No") || logItem.includes("❌")) {
+                                return <div key={i} className="text-red-500 text-xs pl-2 font-medium mt-1">• {logItem.trim()}</div>
+                            }
+                            return null;
+                        })}
+
+                        {/* Check for Rejections stored in the second part of the string (if distinct) */}
+                        {text.split("|").slice(1).map((part, i) => {
+                            if (part.includes("Triggered No") || part.includes("❌")) {
+                                return <div key={`rej-${i}`} className="text-red-500 text-xs pl-2 font-medium mt-1">• {part.trim()}</div>
+                            }
                             return null;
                         })}
                     </div>

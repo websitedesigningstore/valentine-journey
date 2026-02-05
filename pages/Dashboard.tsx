@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, ValentineConfig, DayType, DEFAULT_CONTENT } from '../types';
 import { getUserConfig, updateUserConfig, deleteUserConfession } from '../services/storage';
 import { getSessionUser, updateSessionActivity, clearSession } from '../utils/sessionManager';
 import ConfessionRenderer from '../components/ConfessionRenderer';
+
+
 
 const SHARE_MESSAGES: Record<DayType, { title: string, text: string }> = {
   [DayType.ROSE]: {
@@ -62,6 +64,17 @@ const Dashboard: React.FC = () => {
   const [editingDay, setEditingDay] = useState<DayType | null>(null);
   const [message, setMessage] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const editPanelRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to edit panel when it opens
+  useEffect(() => {
+    if (editingDay && editPanelRef.current) {
+      // Build a small delay to ensure rendering and smooth behavior on mobile
+      setTimeout(() => {
+        editPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [editingDay]);
 
   // State for Custom Share Modal
   const [shareModalData, setShareModalData] = useState<{ day: string, link: string, title: string, text: string } | null>(null);
@@ -347,7 +360,7 @@ const Dashboard: React.FC = () => {
 
           {/* EDITING PANEL */}
           {editingDay && (
-            <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-rose-200 animate-slide-up sticky top-4 z-20">
+            <div ref={editPanelRef} className="bg-white p-6 rounded-2xl shadow-lg border-2 border-rose-200 animate-slide-up sticky top-4 z-20">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-lg text-rose-700 flex items-center gap-2">
                   {DAY_ICONS[editingDay]} Editing {editingDay}
