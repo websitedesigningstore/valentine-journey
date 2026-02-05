@@ -31,6 +31,8 @@ const LandingPage: React.FC = () => {
         navigate('/dashboard');
       }
     } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Something went wrong');
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
@@ -75,14 +77,13 @@ const LandingPage: React.FC = () => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1 ml-1">Mobile Number</label>
             <input
               type="tel"
               required
-              pattern="[0-9]{10}"
               maxLength={10}
               value={mobile}
               onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}

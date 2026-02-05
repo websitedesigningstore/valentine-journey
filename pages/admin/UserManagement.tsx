@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAdminSession, clearAdminSession, updateAdminActivity, logAdminAction } from '../../services/adminAuth';
-import { getAllUsers, banUser, unbanUser, deleteUser } from '../../services/storage';
+import { getAllUsers, banUser, unbanUser, deleteUser, resetUserPin } from '../../services/storage';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 
 interface UserData {
@@ -26,6 +26,8 @@ const UserManagement: React.FC = () => {
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
     const [showBanModal, setShowBanModal] = useState(false);
     const [banReason, setBanReason] = useState('');
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [newPin, setNewPin] = useState('');
 
     useEffect(() => {
         if (!admin) {
@@ -111,6 +113,22 @@ const UserManagement: React.FC = () => {
         } catch (error) {
             console.error('Error deleting user:', error);
             alert('Failed to delete user');
+        }
+    };
+
+    const handleResetPin = async () => {
+        if (!selectedUser || !admin || !newPin) return;
+
+        try {
+            await resetUserPin(selectedUser.id, newPin, admin.id);
+            await logAdminAction(admin.id, `Reset PIN for user: ${selectedUser.username}`, 'user', selectedUser.id);
+            alert(`PIN Reset Successful! New PIN for ${selectedUser.username} is: ${newPin}`);
+            setShowResetModal(false);
+            setNewPin('');
+            setSelectedUser(null);
+        } catch (error) {
+            console.error('Error resetting PIN:', error);
+            alert('Failed to reset PIN');
         }
     };
 
@@ -216,6 +234,16 @@ const UserManagement: React.FC = () => {
                                                     >
                                                         Delete
                                                     </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedUser(user);
+                                                            setNewPin(''); // Clean state
+                                                            setShowResetModal(true);
+                                                        }}
+                                                        className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-all"
+                                                    >
+                                                        🔑 PIN
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -273,6 +301,45 @@ const UserManagement: React.FC = () => {
                                     onClick={() => {
                                         setShowBanModal(false);
                                         setBanReason('');
+                                        setSelectedUser(null);
+                                    }}
+                                    className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-all"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Reset PIN Modal */}
+                {showResetModal && selectedUser && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-gray-700">
+                            <h3 className="text-xl font-bold text-white mb-4">Reset PIN: {selectedUser.username}</h3>
+                            <p className="text-gray-400 text-sm mb-4">Enter a new 4-digit PIN for this user.</p>
+
+                            <input
+                                type="text"
+                                maxLength={4}
+                                placeholder="Enter New PIN"
+                                value={newPin}
+                                onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                                className="w-full px-4 py-3 rounded-lg bg-gray-900 border border-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 mb-4 font-mono text-center tracking-[1em] text-xl"
+                            />
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleResetPin}
+                                    disabled={newPin.length < 4}
+                                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                >
+                                    Set PIN
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowResetModal(false);
+                                        setNewPin('');
                                         setSelectedUser(null);
                                     }}
                                     className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-all"

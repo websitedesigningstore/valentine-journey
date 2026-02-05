@@ -128,3 +128,16 @@ export const hasPermission = (admin: Admin, permission: string): boolean => {
     if (admin.role === 'super_admin') return true;
     return admin.permissions[permission] === true;
 };
+
+export const changeAdminPassword = async (adminId: string, newPassword: string): Promise<void> => {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const { error } = await supabase
+        .from(ADMINS_TABLE)
+        .update({ password_hash: hashedPassword })
+        .eq('id', adminId);
+
+    if (error) throw new Error(error.message);
+
+    await logAdminAction(adminId, 'change_password', 'admin', adminId);
+};

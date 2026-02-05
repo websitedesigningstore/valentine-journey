@@ -12,7 +12,7 @@ export const registerUser = async (username: string, mobile: string, partnerName
     .from(USERS_TABLE)
     .select('id')
     .eq('mobile', mobile)
-    .single();
+    .maybeSingle();
 
   if (existingUser) throw new Error("Mobile number already registered");
 
@@ -246,6 +246,12 @@ export const deleteUser = async (userId: string, adminId: string) => {
   await supabase.from(CONFIG_TABLE).delete().eq('user_id', userId);
   await supabase.from(USERS_TABLE).delete().eq('id', userId);
   await supabase.from('admin_logs').insert({ admin_id: adminId, action: 'delete_user', target_type: 'user', target_id: userId });
+};
+
+export const resetUserPin = async (userId: string, newPin: string, adminId: string) => {
+  const hashedPin = await bcrypt.hash(newPin, 10);
+  await supabase.from(USERS_TABLE).update({ pin: hashedPin }).eq('id', userId);
+  await supabase.from('admin_logs').insert({ admin_id: adminId, action: 'reset_pin', target_type: 'user', target_id: userId });
 };
 
 export const getAllConfessions = async () => {

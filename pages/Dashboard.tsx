@@ -524,6 +524,18 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Need Help Button */}
+      <a
+        href="https://wa.me/918294037318?text=Hi%2C%20I%20need%20help%20with%20Valentine%20Journey%20%F0%9F%96%A4"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-full shadow-lg flex items-center gap-2 font-bold transition-transform hover:scale-105 z-50 animate-bounce-slow"
+        style={{ animationDuration: '3s' }}
+      >
+        <span>👋 Need Help?</span>
+      </a>
+
     </div>
   );
 };

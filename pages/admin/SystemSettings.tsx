@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAdminSession, clearAdminSession } from '../../services/adminAuth';
+import { getAdminSession, clearAdminSession, changeAdminPassword } from '../../services/adminAuth';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 
 const SystemSettings: React.FC = () => {
@@ -8,12 +8,39 @@ const SystemSettings: React.FC = () => {
     const admin = getAdminSession();
     const [maintenanceMode, setMaintenanceMode] = useState(false);
 
+    // Password Change State
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passMsg, setPassMsg] = useState('');
+
     useEffect(() => {
         if (!admin) {
             navigate('/admin/login');
             return;
         }
     }, []);
+
+    const handleChangePassword = async () => {
+        if (!admin) return;
+        if (newPassword !== confirmPassword) {
+            alert("Passwords do not match!");
+            return;
+        }
+        if (newPassword.length < 6) {
+            alert("Password must be at least 6 characters!");
+            return;
+        }
+
+        try {
+            await changeAdminPassword(admin.id, newPassword);
+            setPassMsg("Password updated successfully!");
+            setNewPassword('');
+            setConfirmPassword('');
+            setTimeout(() => setPassMsg(''), 3000);
+        } catch (error: any) {
+            alert("Failed to update password: " + error.message);
+        }
+    };
 
     const handleLogout = () => {
         clearAdminSession();
@@ -33,6 +60,40 @@ const SystemSettings: React.FC = () => {
                 </div>
 
                 <div className="space-y-6">
+
+                    {/* Admin Password Change */}
+                    <div className="bg-gray-800 rounded-xl p-6 border border-purple-500/30">
+                        <h3 className="text-lg font-bold text-white mb-4">🛡️ Change Admin Password</h3>
+                        <div className="grid gap-4 max-w-md">
+                            <div>
+                                <label className="block text-sm text-gray-400 mb-1">New Password</label>
+                                <input
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={e => setNewPassword(e.target.value)}
+                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm text-gray-400 mb-1">Confirm Password</label>
+                                <input
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)}
+                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+                            <button
+                                onClick={handleChangePassword}
+                                disabled={!newPassword || !confirmPassword}
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg transition-all disabled:opacity-50"
+                            >
+                                Update Password
+                            </button>
+                            {passMsg && <p className="text-green-400 text-sm">{passMsg}</p>}
+                        </div>
+                    </div>
+
                     {/* User Link Examples */}
                     <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                         <h3 className="text-lg font-bold text-white mb-4">🔗 User Link Examples</h3>
