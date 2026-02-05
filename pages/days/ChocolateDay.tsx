@@ -30,9 +30,11 @@ const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: 
   const [isLoading, setIsLoading] = useState(true);
 
   // Flow State
-  // 'scratch' -> 'reveal_wish' -> 'chocolate_box' -> 'quiz' -> 'finale'
-  const [stage, setStage] = useState<'scratch' | 'reveal_wish' | 'chocolate_box' | 'quiz' | 'finale'>('scratch');
+  // 'scratch' -> 'reveal_wish' -> 'chocolate_box' -> 'quiz' -> 'rate_sweetness' -> 'finale'
+  const [stage, setStage] = useState<'scratch' | 'reveal_wish' | 'chocolate_box' | 'quiz' | 'rate_sweetness' | 'finale'>('scratch');
   const [selectedChoco, setSelectedChoco] = useState<string | null>(null);
+  const [sweetnessScore, setSweetnessScore] = useState<number>(50); // Default slider value
+  const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
 
   useEffect(() => {
     // Initial Check
@@ -80,10 +82,15 @@ const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: 
     setSelectedChoco(chocoId);
   };
 
-  const handleFinishQuiz = async (answers: string[]) => {
+  const handleQuizFinish = (answers: string[]) => {
+    // Save answers but don't log yet, wait for sweetness score
+    setQuizAnswers(answers);
+    setStage('rate_sweetness');
+  };
+
+  const handleSweetnessSubmit = async () => {
     if (userId) {
-      const sweetness = 100;
-      const log = `Chocolate Day Activity Log: Picked ${selectedChoco} | Quiz: ${answers.join(', ')} | Sweetness: ${sweetness}%`;
+      const log = `Chocolate Day Activity Log: Picked ${selectedChoco} | Quiz: ${quizAnswers.join(', ')} | Sweetness: ${sweetnessScore}%`;
       await saveConfession(userId, log, DayType.CHOCOLATE);
     }
     setStage('finale');
@@ -214,12 +221,49 @@ const ChocolateDay: React.FC<{ data: DayContent; partnerName: string; isActive: 
             questions={CHOCOLATE_QUIZ}
             title="Kuch Meethi Baatein... 🍬"
             themeColor="amber"
-            onComplete={handleFinishQuiz}
+            onComplete={handleQuizFinish}
           />
         </div>
       )}
 
-      {/* STAGE 5: FINALE (WAITING) */}
+      {/* STAGE 5: RATE SWEETNESS (SLIDER) */}
+      {stage === 'rate_sweetness' && (
+        <div className="w-full max-w-sm animate-zoom-in mt-10 text-center">
+          <div className="bg-white/95 p-8 rounded-3xl shadow-2xl border-4 border-amber-300 relative overflow-hidden">
+            <h3 className="text-xl font-hand font-bold text-amber-900 mb-2">Ek Aakhri Cheez...</h3>
+            <p className="text-gray-600 text-sm mb-8">Hamara rishta kitna sweet hai? 🍬</p>
+
+            <div className="w-full relative mb-10 px-2">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={sweetnessScore}
+                onChange={(e) => setSweetnessScore(parseInt(e.target.value))}
+                className="w-full h-3 bg-amber-100 rounded-lg appearance-none cursor-pointer accent-rose-500"
+              />
+              <div className="flex justify-between mt-2 text-xs font-bold text-amber-700">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
+              </div>
+
+              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-rose-500 text-white px-3 py-1 rounded-full font-bold text-sm shadow-md animate-bounce">
+                {sweetnessScore}%
+              </div>
+            </div>
+
+            <button
+              onClick={handleSweetnessSubmit}
+              className="w-full bg-gradient-to-r from-amber-600 to-rose-600 text-white font-bold py-3 rounded-xl shadow-lg hover:scale-105 transition-transform"
+            >
+              Confirm Sweetness! 🍯
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* STAGE 6: FINALE (WAITING) */}
       {stage === 'finale' && (
         <div className="w-full max-w-sm animate-zoom-in mt-10 text-center">
           <div className="bg-gradient-to-br from-amber-100 to-rose-100 p-8 rounded-[2rem] shadow-2xl border-4 border-white/50 relative overflow-hidden">

@@ -106,18 +106,37 @@ const ConfessionRenderer: React.FC<ConfessionRendererProps> = ({ day, text }) =>
                 {hasLog && (
                     <div className="space-y-2 text-sm bg-amber-50/50 p-3 rounded-xl border border-amber-100">
                         <div className="font-bold text-amber-600 border-b border-amber-100 pb-1 mb-2">🍫 Chocolate Day Q&A</div>
-                        {text.split("|")[0].replace("Chocolate Day Activity Log: ", "").split(", ").map((logItem, i) => {
-                            if (logItem.includes("Q")) {
-                                const parts = logItem.split(":");
-                                return (
-                                    <div key={i} className="flex items-center gap-2 bg-white p-2 rounded-lg border border-amber-100 shadow-sm">
-                                        <span className="font-bold text-amber-700 bg-amber-100 px-2 rounded-md text-xs py-0.5">{parts[0].trim()}</span>
-                                        <span className="text-gray-800">{parts.slice(1).join(":").trim()}</span>
-                                    </div>
-                                )
-                            }
-                            return null;
-                        })}
+                        <div className="font-bold text-amber-600 border-b border-amber-100 pb-1 mb-2">🍫 Chocolate Day Q&A</div>
+                        {(() => {
+                            // Extract parts safely
+                            const parts = text.split("|");
+                            // Find the part that contains the Quiz answers
+                            const quizPart = parts.find(p => p.trim().startsWith("Quiz:")) || "";
+                            // Find the part indicating the picked chocolate (usually the first part, stripped of the prefix)
+                            const pickedPart = parts[0].replace("Chocolate Day Activity Log: ", "").replace("Picked ", "").trim();
+
+                            return (
+                                <>
+                                    {pickedPart && (
+                                        <div className="mb-2 text-xs text-amber-700 bg-amber-50 p-2 rounded border border-amber-100">
+                                            Selected: <strong>{pickedPart}</strong>
+                                        </div>
+                                    )}
+                                    {quizPart.replace("Quiz: ", "").split(", ").map((logItem, i) => {
+                                        if (logItem.includes("Q")) {
+                                            const [q, a] = logItem.split(":");
+                                            return (
+                                                <div key={i} className="flex items-center gap-2 bg-white p-2 rounded-lg border border-amber-100 shadow-sm mt-1">
+                                                    <span className="font-bold text-amber-700 bg-amber-100 px-2 rounded-md text-xs py-0.5">{q.trim()}</span>
+                                                    <span className="text-gray-800">{a ? a.trim() : ""}</span>
+                                                </div>
+                                            )
+                                        }
+                                        return null;
+                                    })}
+                                </>
+                            );
+                        })()}
                     </div>
                 )}
 
