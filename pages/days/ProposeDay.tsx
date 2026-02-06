@@ -66,6 +66,11 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
     }
   }, [fullText, quizComplete, response]);
 
+  // Music State
+  const [showMusic, setShowMusic] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   // Handlers
   const logRejection = async (count: number) => {
     const reaction = ["No?", "Are you sure?", "Soch lo!", "Pakka?", "Dil toot jayega 💔", "Last chance!", "Akal thikane hai? 😂"][Math.min(count, 6)];
@@ -101,7 +106,34 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
   };
 
   const handleFinalPromise = async () => {
+    // Transition to Music Stage
+    setShowMusic(true);
+    if (userId) {
+      const rejectionPart = rejections.length > 0 ? ` | ${rejections.join(' | ')}` : '';
+      const log = `Propose Day Activity Log: ${quizLog.join(', ')}${rejectionPart} | Final: SHE SAID YES! 💍❤️ | Entering Music Stage`;
+      await saveConfession(userId, log, DayType.PROPOSE, logId.current);
+    }
+  };
+
+  const toggleMusic = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.volume = 0.35; // 35% Volume
+        audioRef.current.play().catch(e => console.error("Playback failed", e));
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleMusicNext = async () => {
+    if (audioRef.current) {
+      audioRef.current.pause(); // Stop music when moving forward
+    }
+    setShowMusic(false);
     setPromiseMade(true);
+
     if (userId) {
       const rejectionPart = rejections.length > 0 ? ` | ${rejections.join(' | ')}` : '';
       const log = `Propose Day Activity Log: ${quizLog.join(', ')}${rejectionPart} | Final: SHE SAID YES! 💍❤️ | Promise: Will stay happy forever 🤝`;
@@ -152,26 +184,87 @@ const ProposeDay: React.FC<{ data: DayContent; partnerName?: string; isActive: b
       <div className="min-h-screen flex flex-col items-center justify-start pt-10 p-6 overflow-hidden relative bg-gradient-to-br from-pink-100 to-purple-200">
 
         {response === 'yes' ? (
-          <div className="animate-fade-in-up z-10 flex flex-col items-center justify-center mt-20">
-            <div className="text-8xl mb-6 animate-ping">💖</div>
-            <h1 className="text-5xl mb-4 animate-bounce">💍 ❤️</h1>
-            <h2 className="text-3xl font-hand text-rose-600 font-bold mb-4 drop-shadow-md">She Said YES! 💍❤️</h2>
+          <div className="animate-fade-in-up z-10 flex flex-col items-center justify-center mt-20 w-full">
 
-            {!promiseMade ? (
-              <div className="glass-card p-6 rounded-xl mt-4 max-w-sm text-center animate-fade-in">
-                <p className="text-gray-700 text-lg mb-6">"Promise karo, tum hamesha khush rahoge?"</p>
+            {/* MUSIC STAGE */}
+            {showMusic ? (
+              <div className="flex flex-col items-center justify-center animate-fade-in-up z-20 w-full max-w-md px-4 text-center">
+                <p className="text-3xl font-hand font-bold text-rose-600 mb-10 animate-fade-in drop-shadow-sm">
+                  ❤️ Tumhare liye ek last feeling…
+                </p>
+
+                <div className="relative mb-12 group cursor-pointer" onClick={toggleMusic}>
+                  {/* Pulsing Rings */}
+                  <div className={`absolute inset-0 bg-rose-400 rounded-full opacity-20 blur-xl transition-all duration-1000 ${isPlaying ? 'animate-ping scale-150' : 'scale-100'}`}></div>
+                  <div className={`absolute inset-0 bg-rose-500 rounded-full opacity-10 blur-2xl transition-all duration-2000 delay-100 ${isPlaying ? 'animate-ping scale-125' : 'scale-90'}`}></div>
+
+                  {/* Heart Shaped Button */}
+                  <div className={`relative w-32 h-32 flex items-center justify-center transition-transform duration-300 ${isPlaying ? 'scale-100 animate-pulse-slow' : 'hover:scale-110'}`}>
+                    {/* White Heart Background */}
+                    <svg viewBox="0 0 24 24" className="w-full h-full drop-shadow-2xl filter">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                        fill="white" stroke="#ffe4e6" strokeWidth="1" />
+                    </svg>
+
+                    {/* Blood Red Play/Pause Icon */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {isPlaying ? (
+                        <svg className="w-10 h-10 text-rose-700 fill-current" viewBox="0 0 24 24">
+                          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-10 h-10 text-rose-700 fill-current ml-1" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-rose-800/80 mb-12 font-medium tracking-widest uppercase text-xs animate-pulse">
+                  🎵 Click to feel the magic 🎵
+                </p>
+
                 <button
-                  onClick={handleFinalPromise}
-                  className="bg-rose-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform animate-pulse"
+                  onClick={handleMusicNext}
+                  className="bg-white/90 hover:bg-white text-rose-600 font-bold py-3 px-8 rounded-full text-base shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-2 border border-rose-100 transform active:scale-95"
                 >
-                  I Promise! 🤝❤️
+                  Ek Aakhri Surprise... ✨
                 </button>
+
+                <audio ref={audioRef} src="https://backend.lovedecorgift.shop/wp-content/uploads/2026/02/Hamar-Jaan-Hau-Ho-Pawan-Singh-हमर-जन-हउ-ह-Devar-Bhabhi-Bhojpuri-Hit-Video-Song-mp3cut.net_.mp3" />
               </div>
             ) : (
-              <div className="glass-card p-6 rounded-xl mt-4 max-w-sm text-center animate-zoom-in">
-                <p className="text-xl font-hand font-bold text-rose-600 mb-2">Promise Locked! 🔒✨</p>
-                <p className="text-sm text-gray-400">(Chocolate Day ka intezaar hai... abhi aur surprises baaki hain! 🍫)</p>
-              </div>
+              <>
+                {!promiseMade ? (
+                  <>
+                    <div className="text-8xl mb-6 animate-ping">💖</div>
+                    <h1 className="text-5xl mb-4 animate-bounce">💍 ❤️</h1>
+                    <h2 className="text-3xl font-hand text-rose-600 font-bold mb-4 drop-shadow-md">She Said YES! 💍❤️</h2>
+
+                    <div className="glass-card p-6 rounded-xl mt-4 max-w-sm text-center animate-fade-in">
+                      <p className="text-gray-700 text-lg mb-6">"Promise karo, tum hamesha khush rahoge?"</p>
+                      <button
+                        onClick={handleFinalPromise}
+                        className="bg-rose-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform animate-pulse"
+                      >
+                        I Promise! 🤝❤️
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-8xl mb-6 animate-ping">💖</div>
+                    <h1 className="text-5xl mb-4 animate-bounce">💍 ❤️</h1>
+                    <h2 className="text-3xl font-hand text-rose-600 font-bold mb-4 drop-shadow-md">She Said YES! 💍❤️</h2>
+
+                    <div className="glass-card p-6 rounded-xl mt-4 max-w-sm text-center animate-zoom-in">
+                      <p className="text-xl font-hand font-bold text-rose-600 mb-2">Promise Locked! 🔒✨</p>
+                      <p className="text-sm text-gray-400">(Chocolate Day ka intezaar hai... abhi aur surprises baaki hain! 🍫)</p>
+                    </div>
+                  </>
+                )}
+              </>
             )}
           </div>
         ) : (

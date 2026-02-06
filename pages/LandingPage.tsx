@@ -177,6 +177,17 @@ const LandingPage: React.FC = () => {
             {error}
           </div>
         )}
+
+        {/* HELP BUTTON */}
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={() => alert('Agar koi issue aa raha hai, toh please Admin ko contact karein directly. 🛠️')}
+            className="text-xs font-bold text-rose-500 hover:text-rose-700 underline transition-colors"
+          >
+            Need Help? 🤔
+          </button>
+        </div>
       </div>
 
       <div className="absolute bottom-4 text-center text-white/80 text-xs font-light">
