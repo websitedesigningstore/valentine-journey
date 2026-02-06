@@ -182,10 +182,10 @@ const LandingPage: React.FC = () => {
         <div className="mt-6 text-center">
           <button
             type="button"
-            onClick={() => alert('Agar koi issue aa raha hai, toh please Admin ko contact karein directly. 🛠️')}
-            className="text-xs font-bold text-rose-500 hover:text-rose-700 underline transition-colors"
+            onClick={() => window.open('https://wa.me/918294037318?text=Hello%20Admin,%20I%20need%20help%20with%20Valentine%20Journey', '_blank')}
+            className="inline-flex items-center gap-2 text-xs font-bold text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 px-4 py-2 rounded-full transition-all border border-green-200 shadow-sm"
           >
-            Need Help? 🤔
+            Need Help? Chat on WhatsApp 💬
           </button>
         </div>
       </div>
