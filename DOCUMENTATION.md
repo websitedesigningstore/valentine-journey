@@ -7,26 +7,26 @@ This document provides a comprehensive guide to the **Valentine Week Interactive
 ```
 /
 ├── public/              # Static assets (images, audio)
-├── src/
-│   ├── components/      # Reusable UI components
-│   │   ├── Confetti.tsx        # Canvas-based confetti effect
-│   │   ├── FloatingHearts.tsx  # Background animated hearts
-│   │   ├── MusicPlayer.tsx     # Global background audio player
-│   │   └── ScratchCard.tsx     # Canvas scratch-to-reveal component
-│   ├── pages/           # Main application pages
-│   │   ├── days/        # Day-specific interaction components
-│   │   │   ├── RoseDay.tsx, ProposeDay.tsx, etc.
-│   │   │   └── WaitingPage.tsx # Countdown page
-│   │   ├── Dashboard.tsx    # User panel to customize messages & view confessions
-│   │   ├── LandingPage.tsx  # Login/Register screen
-│   │   └── PartnerRoute.tsx # Main routing logic for the partner's view
-│   ├── services/
-│   │   └── storage.ts   # LocalStorage persistence logic (Users, Config, Confessions)
-│   ├── utils/
-│   │   └── dateUtils.ts # Date simulation and routing logic
-│   ├── types.ts         # TypeScript interfaces (User, DayTyp, DayContent)
-│   ├── App.tsx          # App entry point & Router setup
-│   └── index.tsx        # React mounting point
+├── components/          # Reusable UI components
+│   ├── Confetti.tsx        # Canvas-based confetti effect
+│   ├── FloatingHearts.tsx  # Background animated hearts
+│   ├── MusicPlayer.tsx     # Global background audio player
+│   └── ScratchCard.tsx     # Canvas scratch-to-reveal component
+├── pages/               # Main application pages
+│   ├── days/            # Day-specific interaction components
+│   │   ├── RoseDay.tsx, ProposeDay.tsx, etc.
+│   │   └── WaitingPage.tsx # Countdown page
+│   ├── Dashboard.tsx    # User panel to customize messages & view confessions
+│   ├── LandingPage.tsx  # Login/Register screen
+│   └── PartnerRoute.tsx # Main routing logic for the partner's view
+├── services/
+│   └── storage.ts       # Supabase persistence logic (Users, Config, Confessions)
+├── utils/
+│   └── dateUtils.ts     # Date simulation and routing logic
+├── types.ts             # TypeScript interfaces (User, DayTyp, DayContent)
+├── App.tsx              # App entry point & Router setup
+├── index.html           # Main HTML file (Tailwind config & Fonts)
+├── index.tsx            # React mounting point
 └── README.md            # Quick start guide
 ```
 
@@ -47,7 +47,7 @@ The core of this application is its ability to lock/unlock pages based on the cu
 *   **`getDaysLeft()`**: Calculates distinct days remaining until the start of Valentine Week (Feb 7).
 
 ### 2. Storage Service (`services/storage.ts`)
-Currently uses `localStorage` for simplified persistence. Can be swapped for a backend API easily.
+Uses **Supabase** for secure, real-time persistence. Authentication is handled via mobile number and a PIN (hashed with `bcryptjs`).
 
 *   **`registerUser(username, partnerName)`**: Creates a new user profile with a partner name.
 *   **`getUser(userId)`**: Retrieves full user details, including `partnerName`, by ID.
@@ -100,3 +100,9 @@ Each day has unique interactive logic:
 *   **Blank Screen?** Check `index.tsx` is mounting to `#root`.
 *   **Date not changing?** Ensure you aren't passing a conflicting `simDate` in the Hash vs Search params.
 *   **Audio not playing?** Browsers block autoplay. The `MusicPlayer` component waits for the first user interaction (click/touch) to start playing.
+
+## 🎨 Typography
+
+The project uses **Patrick Hand** (from Google Fonts) for a handwritten, romantic, yet readable vibe.
+*   Class: `font-hand` (configured in `tailwind.config` in `index.html`)
+*   Usage: Headers, quizzes, and handwritten-style messages.
