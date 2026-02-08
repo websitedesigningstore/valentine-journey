@@ -48,7 +48,7 @@ const InteractiveQuiz: React.FC<InteractiveQuizProps> = ({ questions, title = "Q
             {/* Progress Bar */}
             <div className={`absolute top-0 left-0 h-2 ${theme.bar} transition-all duration-300`} style={{ width: `${width}%` }}></div>
 
-            <h3 className={`text-sm font-bold ${theme.text} mb-6 uppercase tracking-wider mt-4`}>{title}</h3>
+            <h3 className={`text-xl font-hand font-bold ${theme.text} mb-6 tracking-wide mt-4`}>{title}</h3>
 
             <h2 className="text-2xl font-hand font-bold text-gray-800 mb-8 leading-snug min-h-[80px] flex items-center justify-center">
                 <TypewriterText key={currentIndex} text={currentQ.q} speed={30} delay={200} />
@@ -57,14 +57,14 @@ const InteractiveQuiz: React.FC<InteractiveQuizProps> = ({ questions, title = "Q
             <div className="flex flex-col gap-3 w-full">
                 <button
                     onClick={() => handleAnswer(options[0])}
-                    className={`w-full bg-gradient-to-r ${theme.btn} text-white py-4 rounded-xl font-bold text-xl shadow-lg hover:shadow-xl hover:scale-102 transition-all active:scale-95 group relative overflow-hidden`}
+                    className={`w-full bg-gradient-to-r ${theme.btn} text-white py-4 rounded-xl font-hand font-bold text-2xl shadow-lg hover:shadow-xl hover:scale-102 transition-all active:scale-95 group relative overflow-hidden`}
                 >
                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     <span className="relative z-10 flex items-center justify-center gap-2">{options[0]}</span>
                 </button>
                 <button
                     onClick={() => handleAnswer(options[1])}
-                    className="w-full bg-white text-gray-600 border-2 border-gray-100 py-3 rounded-xl font-bold text-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full bg-white text-gray-600 border-2 border-gray-100 py-3 rounded-xl font-hand font-bold text-xl shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                     {options[1]}
                 </button>
